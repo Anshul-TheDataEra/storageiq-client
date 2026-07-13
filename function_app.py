@@ -21,6 +21,7 @@ No file contents, no file paths, no user identities.
 import azure.functions as func
 import azure.durable_functions as df
 import datetime
+import json
 import logging
 import os
 import time
@@ -319,3 +320,180 @@ async def scan_status(req: func.HttpRequest, client) -> func.HttpResponse:
     }
     return func.HttpResponse(json.dumps(out, default=str),
                              mimetype="application/json")
+
+
+# ===========================================================================
+# FAST usage metrics (Microsoft Graph Reports API) — the 6-second path.
+# This is the DEFAULT the dashboard calls: org-wide storage + per-site totals
+# in one report call. No per-file/version walking (that's the deep scan).
+# Credentials come from the request (UI form) with env fallback.
+# ===========================================================================
+@app.route(route="usagemetrics", methods=["GET", "POST", "OPTIONS"])
+def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
+    import csv
+    import io
+    import re as _re
+
+    cors = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=cors)
+
+    body = {}
+    if req.method == "POST":
+        try:
+            body = req.get_json()
+        except ValueError:
+            body = {}
+
+    def _param(*names):
+        for n in names:
+            v = (req.params.get(n) or body.get(n) or "").strip()
+            if v:
+                return v
+        return ""
+
+    u_tenant = _param("tenant_id", "tenantId", "tenant")
+    u_client = _param("client_id", "clientId", "client")
+    u_secret = _param("client_secret", "clientSecret", "secret")
+
+    period = (_param("period") or "D30").upper()
+    if period not in ("D7", "D30", "D90", "D180"):
+        period = "D30"
+
+    try:
+        token = _get_token(u_tenant, u_client, u_secret)
+        req_headers = {"Authorization": f"Bearer {token}"}
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"status": "error",
+                        "message": "Could not authenticate with the supplied "
+                        "credentials.", "detail": str(e)}),
+            mimetype="application/json", status_code=401, headers=cors)
+
+    SP_RATE = 0.20  # $/GB/mo
+
+    try:
+        url = (f"{GRAPH}/reports/"
+               f"getSharePointSiteUsageDetail(period='{period}')")
+        response = requests.get(url, headers=req_headers)
+        response.raise_for_status()
+        text = response.content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text))
+
+        sites = []
+        total_bytes = total_files = total_active_files = 0
+        for row in reader:
+            def col(*names, default=""):
+                for n in names:
+                    if n in row and row[n] != "":
+                        return row[n]
+                return default
+
+            used_bytes = int(col("Storage Used (Byte)", default="0") or 0)
+            file_count = int(col("File Count", default="0") or 0)
+            active_files = int(col("Active File Count", default="0") or 0)
+            allocated = int(col("Storage Allocated (Byte)", default="0") or 0)
+
+            total_bytes += used_bytes
+            total_files += file_count
+            total_active_files += active_files
+            used_gb = used_bytes / (1024 ** 3)
+
+            raw_url = col("Site URL", "Owner Principal Name")
+            raw_owner = col("Owner Display Name", "Owner Principal Name")
+            _is_hash = bool(_re.fullmatch(r"[0-9A-F]{32}", raw_url.upper()))
+            site_url = "" if _is_hash else raw_url
+            owner_name = ("Anonymised (enable report display names in M365 "
+                          "Admin)") if _is_hash else raw_owner
+
+            sites.append({
+                "site_url": site_url, "owner": owner_name,
+                "anonymised": _is_hash, "used_bytes": used_bytes,
+                "used_gb": round(used_gb, 2),
+                "used_mb": round(used_bytes / (1024 * 1024), 2),
+                "allocated_gb": round(allocated / (1024 ** 3), 2),
+                "file_count": file_count, "active_file_count": active_files,
+                "last_activity": col("Last Activity Date"),
+                "monthly_cost_usd": round(used_gb * SP_RATE, 2),
+            })
+
+        sites.sort(key=lambda s: s["used_bytes"], reverse=True)
+        total_gb = total_bytes / (1024 ** 3)
+
+        org_sp_used_bytes = 0
+        try:
+            storage_url = (f"{GRAPH}/reports/"
+                           f"getSharePointSiteUsageStorage(period='{period}')")
+            sresp = requests.get(storage_url, headers=req_headers)
+            sresp.raise_for_status()
+            sreader = csv.DictReader(
+                io.StringIO(sresp.content.decode("utf-8-sig")))
+            for srow in sreader:
+                if (srow.get("Site Type") or "").strip().lower() != "sharepoint":
+                    continue
+                used = int(srow.get("Storage Used (Byte)") or 0)
+                if used > org_sp_used_bytes:
+                    org_sp_used_bytes = used
+        except Exception as e:
+            logging.warning("storage report failed (%s); using per-site sum", e)
+            org_sp_used_bytes = total_bytes
+        if org_sp_used_bytes == 0:
+            org_sp_used_bytes = total_bytes
+        org_sp_used_gb = org_sp_used_bytes / (1024 ** 3)
+
+        POOL_SKUS = {"ENTERPRISEPACK", "ENTERPRISEPREMIUM", "SPE_E3", "SPE_E5"}
+        seat_count = 0
+        quota_source = "formula"
+        try:
+            skus_resp = requests.get(f"{GRAPH}/subscribedSkus",
+                                     headers=req_headers)
+            if skus_resp.status_code == 200:
+                for sku in skus_resp.json().get("value", []):
+                    if sku.get("skuPartNumber") in POOL_SKUS:
+                        seat_count += sku.get("consumedUnits", 0)
+            else:
+                quota_source = "unavailable"
+        except Exception:
+            quota_source = "unavailable"
+
+        org_quota_gb = 1024 + seat_count * 10
+        org_unused_gb = max(0.0, org_quota_gb - org_sp_used_gb)
+        org_used_pct = (round(org_sp_used_gb / org_quota_gb * 100, 1)
+                        if org_quota_gb > 0 else 0.0)
+
+        summary = {
+            "period": period, "site_count": len(sites),
+            "org_used_gb": round(org_sp_used_gb, 2),
+            "org_quota_gb": round(org_quota_gb, 2),
+            "org_unused_gb": round(org_unused_gb, 2),
+            "org_used_pct": org_used_pct, "seat_count": seat_count,
+            "quota_source": quota_source,
+            "total_used_gb": round(total_gb, 2),
+            "total_used_tb": round(total_gb / 1024, 3),
+            "total_files": total_files,
+            "total_active_files": total_active_files,
+            "total_monthly_cost_usd": round(org_sp_used_gb * SP_RATE, 2),
+            "total_yearly_cost_usd": round(org_sp_used_gb * SP_RATE * 12, 2),
+            "sp_rate_per_gb_month": SP_RATE,
+        }
+        return func.HttpResponse(
+            json.dumps({"status": "success", "summary": summary,
+                        "sites": sites}, indent=2),
+            mimetype="application/json", status_code=200, headers=cors)
+
+    except requests.HTTPError as e:
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": str(e),
+                        "hint": "If 403, grant 'Reports.Read.All' (Application) "
+                        "to the Entra app and admin-consent it."}),
+            mimetype="application/json",
+            status_code=getattr(e.response, "status_code", 500), headers=cors)
+    except Exception as e:
+        logging.exception("usagemetrics failed")
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": str(e)}),
+            mimetype="application/json", status_code=500, headers=cors)
