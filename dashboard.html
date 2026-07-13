@@ -1771,6 +1771,23 @@ document.addEventListener('mouseover', (e) => {
   box.style.top = top + 'px';
 });
 
+// The inline display:block set above always wins over the CSS
+// ".tip-wrap:hover .tip-box{display:block}" rule and its implicit
+// ".tip-box{display:none}" base state — inline styles have higher
+// specificity than any stylesheet rule, so the box never closed on its own
+// once shown. Explicitly clear it when the pointer actually leaves the
+// wrapper (mouseout with a relatedTarget check so moving between the icon
+// and its own box doesn't flicker-close it).
+document.addEventListener('mouseout', (e) => {
+  const wrap = e.target.closest('.tip-wrap');
+  if (!wrap) return;
+  const box = wrap.querySelector('.tip-box');
+  if (!box) return;
+  const to = e.relatedTarget;
+  if (to && wrap.contains(to)) return; // still inside the same tip-wrap
+  box.style.display = 'none';
+});
+
 // Hide fixed-position tip boxes on scroll — their JS-computed coordinates
 // would otherwise go stale as the page moves under them.
 document.addEventListener('scroll', () => {
