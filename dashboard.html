@@ -464,7 +464,7 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
         <div id="demo-bars"></div>
       </div>
       <div class="card">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Avg versions per site</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px" id="ver-chart-title">Top sites by storage</div>
         <div class="chart-wrap" style="height:200px"><canvas id="ver-chart"></canvas></div>
       </div>
     </div>
@@ -942,10 +942,42 @@ function renderLiveDiscovery(data) {
 
   const vGB = usedGB * 0.58;
   gel('demo-bars').innerHTML =
-    bar('Total used', 100, 'var(--navy4)', fmtTB(usedGB / 1024)) +
+    bar('Total used', 100, 'var(--navy4)', fmtExactGB(usedGB)) +
     bar('Version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB))) +
     bar('Recoverable', usedGB > 0 ? Math.round(archivGB / usedGB * 100) : 0, 'var(--green)', fmtGB(archivGB)) +
     bar('Active content', usedGB > 0 ? Math.round((usedGB - archivGB) / usedGB * 100) : 0, 'var(--blue)', fmtGB(usedGB - archivGB));
+
+  // The fast scan doesn't have real per-file version counts (that needs a
+  // deep scan), so this chart shows storage-by-site instead — still gives a
+  // real "which sites are biggest" picture rather than a blank chart.
+  const chartSites = sorted.slice(0, 8);
+  if (chVer) chVer.destroy();
+  const verCanvas = gel('ver-chart');
+  if (verCanvas && chartSites.length) {
+    chVer = new Chart(verCanvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: chartSites.map(s => (s.site_url || 'Site').split('@')[0].slice(0, 14)),
+        datasets: [{
+          label: 'Used storage (GB)',
+          data: chartSites.map(s => Math.round(s.used_gb || 0)),
+          backgroundColor: chartSites.map(s => (s.used_gb || 0) > 150
+            ? 'rgba(224,82,82,0.65)' : (s.used_gb || 0) > 60
+            ? 'rgba(232,147,58,0.65)' : 'rgba(52,196,122,0.65)'),
+          borderRadius: 3, borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { backgroundColor: '#0F1526', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1 } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#4E5A7A', font: { size: 10 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#4E5A7A' } }
+        }
+      }
+    });
+  }
 
   gel('demo-results').style.display = 'block';
   setT('scan-lbl', 'LIVE SCAN');
