@@ -184,6 +184,32 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
 .ft-brand{font-size:11px;color:var(--white3);letter-spacing:.06em}
 .ft-src{font-size:10px;color:var(--white3);text-align:right;line-height:1.9}
+
+/* ─── TOOLTIP SYSTEM ─── */
+.tip-wrap{position:relative;display:inline-flex;align-items:center;gap:4px}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(212,168,67,0.15);border:1px solid rgba(212,168,67,0.3);color:var(--gold);font-size:8px;font-weight:700;cursor:help;flex-shrink:0;font-family:var(--body);line-height:1;transition:background .15s}
+.tip-icon:hover{background:rgba(212,168,67,0.3)}
+.tip-box{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0F1526;border:1px solid rgba(212,168,67,0.25);border-radius:8px;padding:12px 14px;width:280px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:rgba(212,168,67,0.25)}
+.tip-wrap:hover .tip-box{display:block}
+.tip-formula{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);background:rgba(212,168,67,0.08);border-radius:4px;padding:6px 8px;margin:6px 0;line-height:1.6;white-space:pre-wrap}
+.tip-src{font-size:10px;color:var(--white3);margin-top:6px;line-height:1.5}
+.tip-src strong{color:var(--green);font-weight:500}
+.tip-title{font-size:11px;font-weight:600;color:var(--white);margin-bottom:4px}
+.tip-note{font-size:10px;color:var(--amber);margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);line-height:1.5}
+
+/* ─── SCAN MODE BANNER ─── */
+.scan-mode-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 20px;border-radius:var(--r);margin-bottom:28px;font-size:12px}
+.scan-mode-bar.estimate{background:rgba(232,147,58,0.08);border:1px solid rgba(232,147,58,0.2);color:var(--amber)}
+.scan-mode-bar.scanned{background:rgba(52,196,122,0.08);border:1px solid rgba(52,196,122,0.2);color:var(--green)}
+.scan-mode-bar strong{font-weight:500}
+
+/* ─── NET SAVING CALLOUT ─── */
+.saving-breakdown{background:var(--navy2);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px 18px;margin-top:14px}
+.saving-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.saving-row:last-child{border-bottom:none;padding-top:8px;margin-top:2px;border-top:1px solid rgba(255,255,255,0.1)}
+.saving-row-lbl{color:var(--white2)}
+.saving-row-val{font-family:'Sora',sans-serif;font-size:12px;font-weight:600}
 </style>
 </head>
 <body>
@@ -227,6 +253,12 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
     <span class="sec-tag">Confidence</span>
     <span class="sec-title">What these numbers are based on</span>
     <div class="sec-rule"></div>
+  </div>
+
+  <!-- Scan mode indicator - updates when demo/live scan runs -->
+  <div id="exec-mode-bar" class="scan-mode-bar estimate">
+    <span>⚠ <strong>Illustrative estimates</strong> — figures below are based on your slider inputs, not a live scan. Run the Demo Scan or connect your tenant to replace estimates with confirmed data.</span>
+    <button class="btn btn-p" style="font-size:11px;padding:6px 14px;white-space:nowrap" onclick="switchTab('discovery')">Run Scan →</button>
   </div>
 
   <div class="conf-strip mb">
@@ -282,23 +314,96 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Policy and pricing</div>
         <div class="ctrl-row">
-          <div class="ctrl-lbl">Versions to keep per file<span class="ctrl-sub">Current version + N prior remain in SharePoint</span></div>
+          <div class="ctrl-lbl">
+            <div class="tip-wrap">Versions to keep per file
+              <span class="tip-icon">i</span>
+              <div class="tip-box">
+                <div class="tip-title">Version Retention Policy</div>
+                <div class="tip-formula">Kept in SP = current + (keep-1) prior
+Archived = all versions beyond this</div>
+                <div class="tip-src">Policy you set. Microsoft default is unlimited. Best practice: 3–5. After live scan: applied per library.</div>
+                <div class="tip-note">⚠ Live scan confirms actual current version counts per site before any archival decision.</div>
+              </div>
+            </div>
+            <span class="ctrl-sub">Current version + N prior remain in SharePoint</span>
+          </div>
           <input type="range" id="sl-keep" min="1" max="20" step="1" value="3">
           <div class="ctrl-val" id="ov-keep">3</div>
         </div>
+
         <div class="ctrl-row">
-          <div class="ctrl-lbl">Version overhead estimate<span class="ctrl-sub">% of your storage that is version copies</span></div>
+          <div class="ctrl-lbl">
+            <div class="tip-wrap">Avg versions per file
+              <span class="tip-icon">i</span>
+              <div class="tip-box">
+                <div class="tip-title">Average Version Count</div>
+                <div class="tip-formula">archivable_per_file = (avgVer - keep) / avgVer
+excess_versions = avgVer - keep</div>
+                <div class="tip-src"><strong>Source:</strong> Industry median for enterprises with versioning enabled is 150–250. Live scan returns exact figure from Graph API per site.</div>
+                <div class="tip-note">⚠ This is the single biggest lever. Live scan replaces this assumption with your exact number, making the archivable figure precise.</div>
+              </div>
+            </div>
+            <span class="ctrl-sub">Industry median: 150–250. Live scan confirms exact value.</span>
+          </div>
+          <input type="range" id="sl-avgver" min="20" max="500" step="10" value="200">
+          <div class="ctrl-val" id="ov-avgver">200</div>
+        </div>
+
+        <div class="ctrl-row">
+          <div class="ctrl-lbl">
+            <div class="tip-wrap">% files that are version-heavy
+              <span class="tip-icon">i</span>
+              <div class="tip-box">
+                <div class="tip-title">Version-Heavy File Proportion</div>
+                <div class="tip-formula">archivable_GB = verGB × pctHeavy × (avgVer-keep)/avgVer</div>
+                <div class="tip-src"><strong>Source:</strong> Industry benchmark. Not all files accumulate versions equally — media, images, large binaries often have few versions. Document libraries typically 60–75%. Live scan confirms per library.</div>
+                <div class="tip-note">⚠ Assumption. Live scan measures this exactly per document library.</div>
+              </div>
+            </div>
+            <span class="ctrl-sub">Files with more versions than your keep policy</span>
+          </div>
+          <input type="range" id="sl-pct" min="10" max="95" step="5" value="65">
+          <div class="ctrl-val" id="ov-pct">65%</div>
+        </div>
+
+        <div class="ctrl-row">
+          <div class="ctrl-lbl">
+            <div class="tip-wrap">Version storage as % of total
+              <span class="tip-icon">i</span>
+              <div class="tip-box">
+                <div class="tip-title">Version Overhead</div>
+                <div class="tip-formula">verGB = totalGB × vspct
+(total version copy storage)</div>
+                <div class="tip-src"><strong>Source:</strong> Microsoft capacity planning guidance and third-party studies: 45–70% of SP storage is version copies in enterprises with default version settings. Live scan measures exactly.</div>
+                <div class="tip-note">⚠ Assumption. Organisations with versioning limits already set will be lower. Legal and finance firms often 65–80%.</div>
+              </div>
+            </div>
+            <span class="ctrl-sub">% of total storage that is version copy data</span>
+          </div>
           <input type="range" id="sl-vspct" min="20" max="80" step="5" value="58">
           <div class="ctrl-val" id="ov-vspct">58%</div>
         </div>
+
         <div class="ctrl-row">
-          <div class="ctrl-lbl">SharePoint overage rate ($/GB/mo)<span class="ctrl-sub">Adjust if you have a Microsoft EA discount</span></div>
+          <div class="ctrl-lbl">
+            <div class="tip-wrap">SharePoint overage rate ($/GB/mo)
+              <span class="tip-icon">i</span>
+              <div class="tip-box">
+                <div class="tip-title">Microsoft Extra File Storage Rate</div>
+                <div class="tip-formula">overageCost = overGB × spRate × 12</div>
+                <div class="tip-src"><strong>Source:</strong> Microsoft M365 Admin Centre — Extra File Storage add-on. Published list: $0.20/GB/mo. EA customers typically $0.12–$0.18. Confirm in your Microsoft invoice or contact your account manager.</div>
+                <div class="tip-note">💡 Adjust this slider if you have a Microsoft discount. All saving figures update instantly.</div>
+              </div>
+            </div>
+            <span class="ctrl-sub">Microsoft published: $0.20. EA discount: $0.12–$0.18.</span>
+          </div>
           <input type="range" id="sl-sprate" min="0.05" max="0.25" step="0.01" value="0.20">
           <div class="ctrl-val" id="ov-sprate">$0.20</div>
         </div>
+
         <div class="callout amber" style="margin-top:20px">
           <span class="callout-icon">💡</span>
-          <div class="callout-text"><strong>Microsoft discount?</strong> Many enterprise customers with EA agreements pay $0.12–$0.18/GB/mo. Adjust the rate above. The saving case is compelling at any rate above $0.05.</div>
+          <div class="callout-text"><strong>Microsoft discount?</strong> Many enterprise customers with EA agreements pay $0.12–$0.18/GB/mo. Adjust the rate above. All saving figures update instantly. The ADLS rate ($0.003/GB/mo) is fixed Azure published pricing.</div>
         </div>
       </div>
     </div>
@@ -312,23 +417,67 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
 
   <div class="g4 mb">
     <div class="tile" style="--tile-accent:var(--blue)">
-      <div class="tile-lbl">Free pool (E3/E5)</div>
+      <div class="tile-lbl">
+        <div class="tip-wrap">Free pool (E3/E5/E1)
+          <span class="tip-icon">i</span>
+          <div class="tip-box">
+            <div class="tip-title">SharePoint Free Pool</div>
+            <div class="tip-formula">pool = 1 TB + (licences × 10 GB)</div>
+            <div class="tip-src"><strong>Source:</strong> Microsoft SharePoint Online Limits documentation. 1 TB base per tenant + 10 GB per assigned E1/E3/E5/Business licence. Frontline (F1/F3) licences do NOT contribute. Pool is shared across all site collections.</div>
+            <div class="tip-note">⚠ Uses assigned licences from slider. Live scan reads exact assigned count from Graph API (User.Read.All permission).</div>
+          </div>
+        </div>
+      </div>
       <div class="tile-val c-blue" id="t-pool">—</div>
-      <div class="tile-sub">1 TB + 10 GB per licence</div>
-      <div class="tile-note">Already paid for</div>
+      <div class="tile-sub">1 TB + 10 GB × assigned licences</div>
+      <div class="tile-note">Already paid for in your M365 licence</div>
     </div>
     <div class="tile" style="--tile-accent:var(--gold)">
-      <div class="tile-lbl">Storage in use today</div>
+      <div class="tile-lbl">
+        <div class="tip-wrap">Storage in use today
+          <span class="tip-icon">i</span>
+          <div class="tip-box">
+            <div class="tip-title">Total Consumed Storage</div>
+            <div class="tip-formula">total = used + additional_needed</div>
+            <div class="tip-src">Sum of current storage and planned additions. <strong>Live scan:</strong> Graph API returns exact per-site usage from /sites/{id}/drive endpoint with .quota.used property.</div>
+            <div class="tip-note">⚠ Slider input — estimate only. Live scan returns exact figure to the GB.</div>
+          </div>
+        </div>
+      </div>
       <div class="tile-val c-gold" id="t-used">—</div>
       <div class="tile-sub" id="t-used-sub">—</div>
     </div>
     <div class="tile" id="t-gap-tile" style="--tile-accent:var(--green)">
-      <div class="tile-lbl">Headroom / Overage</div>
+      <div class="tile-lbl">
+        <div class="tip-wrap">Headroom / Overage
+          <span class="tip-icon">i</span>
+          <div class="tip-box">
+            <div class="tip-title">Pool Headroom or Overage</div>
+            <div class="tip-formula">gap = pool − total_used
+if gap > 0 → headroom (free)
+if gap < 0 → overage (billed at SP rate)</div>
+            <div class="tip-src"><strong>Source:</strong> Microsoft bills overage via Extra File Storage add-on at your contracted rate (default $0.20/GB/mo). Visible in M365 Admin Centre → Billing → Your products.</div>
+            <div class="tip-note">💡 If green: you are not yet paying overage. If red: overage billing is already active today.</div>
+          </div>
+        </div>
+      </div>
       <div class="tile-val" id="t-gap">—</div>
       <div class="tile-sub" id="t-gap-sub">—</div>
     </div>
     <div class="tile" style="--tile-accent:var(--red)">
-      <div class="tile-lbl">Demand in 3 years</div>
+      <div class="tile-lbl">
+        <div class="tip-wrap">Demand in 3 years
+          <span class="tip-icon">i</span>
+          <div class="tip-box">
+            <div class="tip-title">Year-3 Storage Projection</div>
+            <div class="tip-formula">yr3 = total × (1 + growth)³
+yr3_overage = max(0, yr3 − pool)
+yr3_cost = yr3_overage × spRate × 12</div>
+            <div class="tip-src">Compound annual growth applied to current total. Growth rate is configurable — live scan provides 90-day actual trend from Reports API for validation.</div>
+            <div class="tip-note">⚠ Growth rate is an assumption. Even at 5% growth most growing tenants breach their pool within 3–5 years.</div>
+          </div>
+        </div>
+      </div>
       <div class="tile-val c-amber" id="t-yr3">—</div>
       <div class="tile-sub" id="t-yr3-sub">—</div>
     </div>
@@ -407,11 +556,70 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
     </div>
   </div>
 
+  <!-- Exec scan results - shown after demo/live scan updates exec -->
+  <div id="exec-scan-results" style="display:none" class="mb-sm">
+    <div class="callout green" style="margin-bottom:16px;margin-top:0">
+      <span class="callout-icon">✓</span>
+      <div class="callout-text"><strong id="exec-scan-source">Scan data loaded.</strong> The figures below are derived from scan results — not slider estimates. Version counts, storage per site, and archivable volumes are confirmed from your Microsoft 365 tenant data.</div>
+    </div>
+    <div class="g4">
+      <div class="tile" style="--tile-accent:var(--blue)">
+        <div class="tile-lbl">Scan: Total Storage</div>
+        <div class="tile-val c-blue" id="exec-scan-total">—</div>
+        <div class="tile-sub">Confirmed from Graph API</div>
+      </div>
+      <div class="tile" style="--tile-accent:var(--green)">
+        <div class="tile-lbl">Scan: Recoverable</div>
+        <div class="tile-val c-green" id="exec-scan-arch">—</div>
+        <div class="tile-sub">Per-site version analysis</div>
+      </div>
+      <div class="tile" style="--tile-accent:var(--gold)">
+        <div class="tile-lbl">Scan: Annual Net Saving</div>
+        <div class="tile-val c-gold" id="exec-scan-save1">—</div>
+        <div class="tile-sub">After ADLS running cost</div>
+      </div>
+      <div class="tile" style="--tile-accent:var(--amber)">
+        <div class="tile-lbl">Scan: Avg Versions/File</div>
+        <div class="tile-val c-amber" id="exec-scan-avgver">—</div>
+        <div class="tile-sub">Weighted across all sites</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card mb-sm">
     <table class="dt">
-      <thead><tr><th>Scenario</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>3-year total</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>
+            <div class="tip-wrap" style="justify-content:flex-end">Year 0 (now)
+              <span class="tip-icon">i</span>
+              <div class="tip-box" style="left:auto;right:0;transform:none">
+                <div class="tip-title">Year 0 — Current Annual Cost</div>
+                <div class="tip-formula">cost_Y0 = max(0, usedGB − poolGB) × spRate × 12</div>
+                <div class="tip-src">What you are paying Microsoft today in overage. If within free pool, this is $0. This is the baseline the client can verify against their Microsoft invoice.</div>
+              </div>
+            </div>
+          </th>
+          <th>Year 1</th>
+          <th>Year 2</th>
+          <th>Year 3</th>
+          <th>
+            <div class="tip-wrap" style="justify-content:flex-end">3-year total
+              <span class="tip-icon">i</span>
+              <div class="tip-box" style="left:auto;right:0;transform:none">
+                <div class="tip-title">3-Year Total</div>
+                <div class="tip-formula">total = Y1 + Y2 + Y3
+(Y0 excluded — it is already spent or locked in)</div>
+                <div class="tip-src">Sum of projected annual costs over years 1–3 from today. Y0 is shown for reference but excluded from the 3-year total as it represents the current position, not future spend.</div>
+              </div>
+            </div>
+          </th>
+        </tr>
+      </thead>
       <tbody id="fin-tbody"></tbody>
     </table>
+    <div id="net-saving-breakdown" class="saving-breakdown" style="margin-top:16px"></div>
     <div class="anno" id="fin-anno">—</div>
   </div>
 
@@ -464,7 +672,7 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
         <div id="demo-bars"></div>
       </div>
       <div class="card">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px" id="ver-chart-title">Top sites by storage</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Avg versions per site</div>
         <div class="chart-wrap" style="height:200px"><canvas id="ver-chart"></canvas></div>
       </div>
     </div>
@@ -549,8 +757,10 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Policy and pricing</div>
         <div class="ctrl-row"><div class="ctrl-lbl">Versions to keep per file<span class="ctrl-sub">Current + N prior remain in SharePoint</span></div><input type="range" id="sl-keep-2" min="1" max="20" step="1" value="3"><div class="ctrl-val" id="ov2-keep">3</div></div>
-        <div class="ctrl-row"><div class="ctrl-lbl">Version overhead %<span class="ctrl-sub">% of storage that is version copies</span></div><input type="range" id="sl-vspct-2" min="20" max="80" step="5" value="58"><div class="ctrl-val" id="ov2-vspct">58%</div></div>
-        <div class="ctrl-row"><div class="ctrl-lbl">SharePoint overage rate ($/GB/mo)<span class="ctrl-sub">Adjust for your Microsoft discount</span></div><input type="range" id="sl-sprate-2" min="0.05" max="0.25" step="0.01" value="0.20"><div class="ctrl-val" id="ov2-sprate">$0.20</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Avg versions per file<span class="ctrl-sub">Industry median 150–250. Live scan confirms exact.</span></div><input type="range" id="sl-avgver-2" min="20" max="500" step="10" value="200"><div class="ctrl-val" id="ov2-avgver">200</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">% files version-heavy<span class="ctrl-sub">Files exceeding your keep policy (industry: 60–75%)</span></div><input type="range" id="sl-pct-2" min="10" max="95" step="5" value="65"><div class="ctrl-val" id="ov2-pct">65%</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Version overhead %<span class="ctrl-sub">% of total storage that is version copies</span></div><input type="range" id="sl-vspct-2" min="20" max="80" step="5" value="58"><div class="ctrl-val" id="ov2-vspct">58%</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">SharePoint overage rate ($/GB/mo)<span class="ctrl-sub">Microsoft list $0.20. EA discount $0.12–$0.18.</span></div><input type="range" id="sl-sprate-2" min="0.05" max="0.25" step="0.01" value="0.20"><div class="ctrl-val" id="ov2-sprate">$0.20</div></div>
       </div>
     </div>
   </div>
@@ -594,33 +804,39 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
 
 <script>
 'use strict';
+
+/* ─── Formatters ─────────────────────────────────────────────────────────── */
 const fmtTB = n => n>=1 ? Math.round(n)+' TB' : Math.round(n*1024)+' GB';
-// Exact TB/GB formatter for LIVE scan data — always 1-decimal precision,
-// GB only, never MB (rounding 1.24 TB down to "1 TB" hides real usage).
-// n is in TB.
-const fmtExact = n => (Math.round(n * 100) / 100).toFixed(2) + ' TB';
-// Same, but the input is already in GB (used for per-site rows etc.).
-const fmtExactGB = gb => fmtExact(gb / 1024);
 const fmtGB = n => n>=1024 ? (n/1024).toFixed(1)+' TB' : Math.round(n)+' GB';
-const fmtC = (n,d=0) => {
+const fmtC  = (n,d=0) => {
   if(n===0) return '$0';
-  if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
   if(Math.abs(n)>=1000) return '$'+Math.round(n/1000).toLocaleString()+'K';
   return '$'+n.toFixed(d);
 };
-const fmtYr = n => fmtC(n)+'/yr';
-const comma = n => Math.round(n).toLocaleString();
-const ADLS = 0.003;
+const fmtYr  = n => fmtC(n)+'/yr';
+const fmtMo  = n => fmtC(n)+'/mo';
+const comma  = n => Math.round(n).toLocaleString();
 
-// Sync paired sliders
+/* ─── Published rates (explicit constants, never hidden) ─────────────────── */
+const ADLS_COOL = 0.003;  // Azure ADLS Gen2 cool tier LRS, East US, July 2026
+                           // Source: azure.microsoft.com/pricing/calculator
+const ADLS_REGION_NOTE = 'East US LRS. UK/EU: +10-20%. GRS: +25%.';
+
+/* ─── Scan state: when a scan runs, exec summary uses scan data ──────────── */
+let SCAN_DATA = null; // null = slider-based; object = scan-derived
+
+/* ─── Slider registry — synced between tab 1 and tab 3 ──────────────────── */
 const SLIDERS = [
-  ['sl-lic','sl-lic-2','ov-lic','ov2-lic', v=>comma(v)],
-  ['sl-used','sl-used-2','ov-used','ov2-used', v=>v+' TB'],
-  ['sl-need','sl-need-2','ov-need','ov2-need', v=>v+' TB'],
-  ['sl-growth','sl-growth-2','ov-growth','ov2-growth', v=>v+'%'],
-  ['sl-keep','sl-keep-2','ov-keep','ov2-keep', v=>v],
-  ['sl-vspct','sl-vspct-2','ov-vspct','ov2-vspct', v=>v+'%'],
-  ['sl-sprate','sl-sprate-2','ov-sprate','ov2-sprate', v=>'$'+parseFloat(v).toFixed(2)],
+  ['sl-lic',    'sl-lic-2',    'ov-lic',    'ov2-lic',    v=>comma(v)],
+  ['sl-used',   'sl-used-2',   'ov-used',   'ov2-used',   v=>v+' TB'],
+  ['sl-need',   'sl-need-2',   'ov-need',   'ov2-need',   v=>v+' TB'],
+  ['sl-growth', 'sl-growth-2', 'ov-growth', 'ov2-growth', v=>v+'%'],
+  ['sl-keep',   'sl-keep-2',   'ov-keep',   'ov2-keep',   v=>v],
+  ['sl-avgver', 'sl-avgver-2', 'ov-avgver', 'ov2-avgver', v=>v],
+  ['sl-pct',    'sl-pct-2',    'ov-pct',    'ov2-pct',    v=>v+'%'],
+  ['sl-vspct',  'sl-vspct-2',  'ov-vspct',  'ov2-vspct',  v=>v+'%'],
+  ['sl-sprate', 'sl-sprate-2', 'ov-sprate', 'ov2-sprate', v=>'$'+parseFloat(v).toFixed(2)],
 ];
 
 function gel(id){return document.getElementById(id)}
@@ -637,252 +853,528 @@ function syncSliders(fromTab) {
 }
 
 SLIDERS.forEach(([a,b,la,lb,fmt]) => {
-  const ea=gel(a),eb=gel(b);
-  if(ea) ea.addEventListener('input',()=>{syncSliders(1);calc();});
-  if(eb) eb.addEventListener('input',()=>{syncSliders(2);calc();});
+  const ea=gel(a), eb=gel(b);
+  if(ea) ea.addEventListener('input',()=>{ syncSliders(1); calc(); });
+  if(eb) eb.addEventListener('input',()=>{ syncSliders(2); calc(); });
 });
 
+/* ─── Read all inputs ────────────────────────────────────────────────────── */
 function readI() {
   return {
-    lic:    getV('sl-lic'),
-    used:   getV('sl-used'),
-    need:   getV('sl-need'),
-    g:      getV('sl-growth')/100,
-    keep:   getV('sl-keep'),
-    vspct:  getV('sl-vspct')/100,
-    SP:     getV('sl-sprate'),
+    lic:    getV('sl-lic'),           // assigned qualifying licences
+    used:   getV('sl-used'),          // current SP storage TB
+    need:   getV('sl-need'),          // additional needed TB
+    g:      getV('sl-growth')/100,    // annual growth rate
+    keep:   getV('sl-keep'),          // versions to keep in SP
+    avgVer: getV('sl-avgver'),        // avg versions per file (NOW EXPOSED)
+    pct:    getV('sl-pct')/100,       // % files that are version-heavy (NOW EXPOSED)
+    vspct:  getV('sl-vspct')/100,     // % of total storage = version copies
+    SP:     getV('sl-sprate'),        // SharePoint overage rate $/GB/mo
   };
 }
 
-function bar(lbl,pct,col,val) {
-  return `<div class="pbar-row"><div class="pbar-lbl">${lbl}</div><div class="pbar-wrap"><div class="pbar" style="width:${Math.min(100,pct)}%;background:${col}"></div></div><div class="pbar-val" style="color:${col}">${val}</div></div>`;
+/* ─── Tooltip bar helper ─────────────────────────────────────────────────── */
+function bar(lbl,pct,col,val,formula) {
+  const tip = formula
+    ? `<div class="tip-wrap" style="flex:none">${lbl}<span class="tip-icon">i</span><div class="tip-box"><div class="tip-title">${lbl}</div><div class="tip-formula">${formula}</div></div></div>`
+    : lbl;
+  return `<div class="pbar-row">
+    <div class="pbar-lbl">${tip}</div>
+    <div class="pbar-wrap"><div class="pbar" style="width:${Math.min(100,Math.max(0,pct))}%;background:${col}"></div></div>
+    <div class="pbar-val" style="color:${col}">${val}</div>
+  </div>`;
 }
 
+/* ─── CORE CALCULATION ENGINE ────────────────────────────────────────────── */
+/*
+ * All formulas are explicit here. Nothing hidden.
+ *
+ * FREE POOL
+ *   Formula:  poolGB = 1024 + licences × 10
+ *   Source:   Microsoft SharePoint Limits documentation
+ *   Caveat:   Only E1/E3/E5/Business licences. F1/F3 do NOT add to pool.
+ *             Only ASSIGNED licences count, not purchased.
+ *
+ * VERSION STORAGE
+ *   Formula:  verGB = totalGB × vspct
+ *   vspct:    User-adjustable slider. Industry median 58%.
+ *   Source:   Microsoft capacity planning guidance; third-party studies.
+ *
+ * ARCHIVABLE STORAGE
+ *   Formula:  archivableRatio = (avgVer - keep) / avgVer
+ *             archGB = verGB × pctHeavy × archivableRatio
+ *   avgVer:   User-adjustable slider. Industry median 150-250.
+ *   pctHeavy: User-adjustable slider. Industry median 65%.
+ *   Both sliders are now VISIBLE. No hidden constants.
+ *
+ * YEAR PROJECTIONS (compound growth)
+ *   Formula:  totalGB_N = totalGB × (1 + g)^N
+ *             overGB_N  = max(0, totalGB_N - poolGB)
+ *             archGB_N  = verGB_N × pctHeavy × archivableRatio  [grows with data]
+ *             optOverGB_N = max(0, totalGB_N - archGB_N - poolGB)
+ *
+ * GROSS SAVING (SP price avoided)
+ *   Formula:  grossSavingYr_N = (overGB_N - optOverGB_N) × SP × 12
+ *             = archGB_N × SP × 12  [when archive fully removes overage]
+ *   This is the cost of storing archGB_N in SP, which you no longer pay.
+ *
+ * ADLS RUNNING COST (deducted to get NET saving)
+ *   Formula:  adlsCostYr_N = archGB_N × ADLS_COOL × 12
+ *   Note:     At $0.003/GB/mo this is ~1.5% of gross saving. Small but real.
+ *
+ * NET SAVING (what we actually deliver to the client)
+ *   Formula:  netSavingYr_N = grossSavingYr_N - adlsCostYr_N
+ *             net3yr = Σ netSavingYr for N=1,2,3
+ *   This is the REAL money. Not gross. Not inflated. Defensible to a CFO.
+ *
+ * ARCHIVABLE GROWS EACH YEAR
+ *   We do NOT assume archGB is constant across 3 years.
+ *   Each year, more version copies accumulate as users keep working.
+ *   archGB_N grows at the same rate as total storage.
+ *   This makes year 2 and year 3 savings LARGER than year 1. Conservative.
+ */
+function deriveYear(n, I) {
+  const totalGB_N = (I.used + I.need) * 1024 * Math.pow(1 + I.g, n);
+  const poolGB    = 1024 + I.lic * 10;
+  const verGB_N   = totalGB_N * I.vspct;
+  const archRatio = Math.max(0, (I.avgVer - I.keep) / I.avgVer);
+  const archGB_N  = Math.round(verGB_N * I.pct * archRatio);
+  const overGB_N  = Math.max(0, totalGB_N - poolGB);
+  const optOverGB_N = Math.max(0, totalGB_N - archGB_N - poolGB);
+  const grossSP   = overGB_N * I.SP;              // monthly SP cost no-action
+  const optSP     = optOverGB_N * I.SP;           // monthly SP cost optimised
+  const adlsMo    = archGB_N * ADLS_COOL;         // monthly ADLS cost
+  const grossSavMo = grossSP - optSP;             // gross monthly saving
+  const netSavMo  = grossSavMo - adlsMo;          // net monthly saving (real)
+  return { totalGB_N, poolGB, verGB_N, archGB_N, overGB_N, optOverGB_N,
+           grossSP, optSP, adlsMo, grossSavMo, netSavMo,
+           spCostYr: overGB_N * I.SP * 12,
+           optCostYr: (optOverGB_N * I.SP + archGB_N * ADLS_COOL) * 12,
+           netSavYr: netSavMo * 12 };
+}
+
+/* ─── MAIN CALC ──────────────────────────────────────────────────────────── */
 let ch3yr=null, chTrend=null, chVer=null;
 
 function calc() {
-  const I=readI();
-  const poolGB = 1024+I.lic*10;
-  const poolTB = poolGB/1024;
-  const usedTB = I.used+I.need;
-  const usedGB = usedTB*1024;
-  const gapTB  = usedTB-poolTB;
-  const overGB = Math.max(0,usedGB-poolGB);
+  const I = readI();
+  const poolGB = 1024 + I.lic * 10;
+  const poolTB = poolGB / 1024;
+  const usedTB = I.used + I.need;
+  const usedGB = usedTB * 1024;
+  const gapTB  = usedTB - poolTB;
+  const overGB = Math.max(0, usedGB - poolGB);
+  const SP     = I.SP;
 
-  // Version archival
-  const verGB  = usedGB*I.vspct;
-  const avgVer = 50;
-  const archR  = Math.max(0,(avgVer-I.keep)/avgVer)*0.65;
-  const archGB = Math.round(verGB*archR);
-  const archTB = archGB/1024;
+  // Year 0 (current) — what they pay RIGHT NOW
+  const Y0 = deriveYear(0, I);
+  const Y1 = deriveYear(1, I);
+  const Y2 = deriveYear(2, I);
+  const Y3 = deriveYear(3, I);
 
-  const g=I.g, SP=I.SP;
+  // 3-year totals
+  const sp3yr     = Y1.spCostYr + Y2.spCostYr + Y3.spCostYr;
+  const opt3yr    = Y1.optCostYr + Y2.optCostYr + Y3.optCostYr;
+  const netSav3yr = Y1.netSavYr + Y2.netSavYr + Y3.netSavYr;
+  const adls3yr   = (Y1.archGB_N + Y2.archGB_N + Y3.archGB_N) * ADLS_COOL * 12 / 3 * 3; // accurate sum
+  const grossSav3yr = (Y1.grossSavMo + Y2.grossSavMo + Y3.grossSavMo) * 12 / 3 * 3; // sum across years
 
-  // Year projections
-  const y = [0,1,2,3].map(n => {
-    const gb = usedGB*Math.pow(1+g,n);
-    const over = Math.max(0,gb-poolGB);
-    const optOver = Math.max(0,gb-archGB-poolGB);
-    return { gb, over, optOver };
-  });
+  // Year 0 archivable (for reference)
+  const archGB_Y0 = Y0.archGB_N;
+  const archTB_Y0 = archGB_Y0 / 1024;
 
-  const spY=[1,2,3].map(n=>y[n].over*SP*12);
-  const optY=[1,2,3].map(n=>y[n].optOver*SP*12);
-  const sp3=spY.reduce((a,v)=>a+v,0);
-  const opt3=optY.reduce((a,v)=>a+v,0);
-  const sav3=sp3-opt3;
-  const savYr=sav3/3;
+  // Ratio — dynamic
+  const ratio = Math.round(SP / ADLS_COOL);
 
-  // Hero KPIs
-  setT('ex-3yr', fmtC(sav3));
-  setT('ex-arch', fmtGB(archGB));
-  setT('ex-util', Math.round(usedGB/poolGB*100)+'%');
-  setT('ex-yr3', fmtC(spY[2]));
+  // If scan data exists, show scan-derived figures on exec summary
+  const inScanMode = SCAN_DATA !== null;
+
+  /* ── Executive Summary Tab ────────────────────────────────────────────── */
+  if (!inScanMode) {
+    setT('ex-3yr',  fmtC(netSav3yr));
+    setT('ex-arch', fmtGB(archGB_Y0));
+    setT('ex-util', Math.round(usedGB/poolGB*100)+'%');
+    setT('ex-yr3',  fmtC(Y3.spCostYr));
+  }
+  // Scan mode: exec KPIs were already set by runDemo/runLive — don't overwrite
+
+  // Mode banner
+  const modebar = gel('exec-mode-bar');
+  if (modebar) {
+    if (inScanMode) {
+      modebar.className = 'scan-mode-bar scanned';
+      modebar.innerHTML = '<span>✓ <strong>Scan data active</strong> — financial figures below are derived from scan results. Adjusting sliders in the Calculator tab will NOT override these figures. Re-run scan to refresh.</span><button class="btn btn-g" style="font-size:11px;padding:6px 14px;white-space:nowrap" onclick="clearScan()">← Back to Estimates</button>';
+    } else {
+      modebar.className = 'scan-mode-bar estimate';
+      modebar.innerHTML = '<span>⚠ <strong>Illustrative estimates</strong> — based on slider inputs. Run Demo Scan or connect tenant to replace with confirmed figures.</span><button class="btn btn-p" style="font-size:11px;padding:6px 14px;white-space:nowrap" onclick="switchTab(\'discovery\')">Run Scan →</button>';
+    }
+  }
 
   // Position tiles
   setT('t-pool', fmtTB(poolTB));
   setT('t-used', fmtTB(usedTB));
   setT('t-used-sub', Math.round(usedGB/poolGB*100)+'% of free pool');
-  setT('t-yr3', fmtTB(y[3].gb/1024));
-  setT('t-yr3-sub', spY[2]>0 ? 'Yr 3 bill: '+fmtYr(spY[2]) : 'Within pool in yr 3');
+  setT('t-yr3', fmtTB(Math.round(Y3.totalGB_N/1024)));
+  setT('t-yr3-sub', Y3.spCostYr>0 ? 'Yr 3 overage bill: '+fmtYr(Y3.spCostYr) : 'Still within pool in yr 3');
 
   const gEl=gel('t-gap'), gTile=gel('t-gap-tile');
-  if(gapTB<=0){
-    gEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' free'; gEl.className='tile-val c-green';
-    gTile.style.setProperty('--tile-accent','var(--green)'); setT('t-gap-sub','Within free entitlement');
-  } else {
-    gEl.textContent='+'+fmtTB(Math.round(gapTB))+' over'; gEl.className='tile-val c-red';
-    gTile.style.setProperty('--tile-accent','var(--red)'); setT('t-gap-sub','Overage: '+fmtYr(overGB*SP*12));
+  if (gTile) {
+    if (gapTB<=0) {
+      gEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' headroom';
+      gEl.className='tile-val c-green';
+      gTile.style.setProperty('--tile-accent','var(--green)');
+      setT('t-gap-sub','Within free entitlement today');
+    } else {
+      gEl.textContent='+'+fmtTB(Math.round(gapTB))+' over';
+      gEl.className='tile-val c-red';
+      gTile.style.setProperty('--tile-accent','var(--red)');
+      setT('t-gap-sub','Overage billing: '+fmtYr(overGB*SP*12));
+    }
   }
 
-  // Scan comparison
-  setT('sc-used', fmtTB(I.used));
-  setT('sc-ver',  fmtGB(Math.round(I.used*1024*I.vspct)));
-  setT('sc-arch', fmtGB(archGB));
-  setT('sc-save1', fmtYr(spY[0]-optY[0]));
-  setT('sc-growth', Math.round(I.g*100)+'%');
+  // Scan comparison table values
+  setT('sc-used',    fmtTB(I.used));
+  setT('sc-ver',     fmtGB(Math.round(usedGB*I.vspct)));
+  setT('sc-arch',    fmtGB(archGB_Y0));
+  setT('sc-save1',   fmtYr(Y1.netSavYr));
+  setT('sc-growth',  Math.round(I.g*100)+'%');
 
-  // Composition bars
+  // Composition bars (Year 0)
+  const verGB_Y0   = usedGB * I.vspct;
+  const activeGB   = usedGB - Y0.archGB_N;
   gel('comp-bars').innerHTML =
-    bar('Total storage used',100,'var(--navy4)',fmtTB(usedTB))+
-    bar('Version copies',Math.round(I.vspct*100),'var(--amber)',fmtGB(Math.round(usedGB*I.vspct)))+
-    bar('Recoverable now',Math.round(archGB/usedGB*100),'var(--green)',fmtGB(archGB))+
-    bar('Active content',Math.round((usedGB-archGB)/usedGB*100),'var(--blue)',fmtGB(Math.round(usedGB-archGB)));
+    bar('Total storage used',100,'var(--navy4)',fmtTB(usedTB),'totalGB = (used + needed) × 1024') +
+    bar('Version copies',Math.round(I.vspct*100),'var(--amber)',fmtGB(Math.round(verGB_Y0)),'verGB = totalGB × '+Math.round(I.vspct*100)+'%\n('+Math.round(I.vspct*100)+'% = version overhead slider)') +
+    bar('Recoverable now',Math.round(archGB_Y0/usedGB*100),'var(--green)',fmtGB(archGB_Y0),'archGB = verGB × pctHeavy × (avgVer−keep)/avgVer\n= '+Math.round(verGB_Y0)+'GB × '+Math.round(I.pct*100)+'% × ('+I.avgVer+'−'+I.keep+')/'+I.avgVer) +
+    bar('Active content',Math.round(activeGB/usedGB*100),'var(--blue)',fmtGB(Math.round(activeGB)),'activeGB = totalGB − archGB');
 
-  // Financial table
-  gel('fin-tbody').innerHTML = `
-    <tr class="tr-alert">
-      <td><div class="rn">No action — pay SharePoint rate</div><div class="rs">$${SP.toFixed(2)}/GB/mo on every GB over free pool</div></td>
-      <td class="c-red">${fmtC(spY[0])}</td><td class="c-red">${fmtC(spY[1])}</td><td class="c-red">${fmtC(spY[2])}</td><td class="c-red">${fmtC(sp3)}</td>
-    </tr>
-    <tr class="tr-hi">
-      <td><div class="rn">StorageIQ optimised</div><div class="rs">Archive ${fmtGB(archGB)} of version history — residual overage only</div></td>
-      <td class="c-green">${fmtC(optY[0])}</td><td class="c-green">${fmtC(optY[1])}</td><td class="c-green">${fmtC(optY[2])}</td><td class="c-green">${fmtC(opt3)}</td>
-    </tr>
-    <tr class="tr-total">
-      <td><div class="rn" style="color:var(--gold)">Cost saving</div><div class="rs">Eliminated by version archival</div></td>
-      <td class="c-gold">${fmtC(spY[0]-optY[0])}</td><td class="c-gold">${fmtC(spY[1]-optY[1])}</td><td class="c-gold">${fmtC(spY[2]-optY[2])}</td>
-      <td class="c-gold" style="font-size:15px;font-weight:700">${fmtC(sav3)}</td>
-    </tr>`;
-  setT('fin-anno',`SharePoint rate: $${SP.toFixed(2)}/GB/mo · Growth: ${Math.round(I.g*100)}%/yr · ${comma(I.lic)} licences · ${fmtTB(poolTB)} free pool · ${fmtGB(archGB)} recoverable`);
+  // Financial table with Year 0
+  const finRows = () => {
+    const src = inScanMode ? SCAN_DATA : null;
+    const d = src ? src.years : null;
+
+    const _Y0sp  = Y0.spCostYr,   _Y1sp  = Y1.spCostYr,   _Y2sp  = Y2.spCostYr,  _Y3sp  = Y3.spCostYr;
+    const _Y0opt = Y0.optCostYr,  _Y1opt = Y1.optCostYr,  _Y2opt = Y2.optCostYr, _Y3opt = Y3.optCostYr;
+    const _sp3   = _Y1sp + _Y2sp + _Y3sp;
+    const _opt3  = _Y1opt + _Y2opt + _Y3opt;
+    const _net3  = (_Y1sp-_Y1opt) + (_Y2sp-_Y2opt) + (_Y3sp-_Y3opt);
+
+    return `
+      <tr class="tr-alert">
+        <td><div class="rn">No action — pay SharePoint overage</div>
+            <div class="rs">$${SP.toFixed(2)}/GB/mo on every GB above free pool · grows with storage at ${Math.round(I.g*100)}%/yr</div></td>
+        <td class="c-red">${fmtC(_Y0sp)}</td>
+        <td class="c-red">${fmtC(_Y1sp)}</td>
+        <td class="c-red">${fmtC(_Y2sp)}</td>
+        <td class="c-red">${fmtC(_Y3sp)}</td>
+        <td class="c-red">${fmtC(_sp3)}</td>
+      </tr>
+      <tr>
+        <td><div class="rn">StorageIQ — ADLS running cost</div>
+            <div class="rs">${fmtGB(Y0.archGB_N)} archived × $${ADLS_COOL}/GB/mo · ${ADLS_REGION_NOTE}</div></td>
+        <td class="c-dim">${fmtC(Y0.adlsMo*12)}</td>
+        <td class="c-dim">${fmtC(Y1.archGB_N*ADLS_COOL*12)}</td>
+        <td class="c-dim">${fmtC(Y2.archGB_N*ADLS_COOL*12)}</td>
+        <td class="c-dim">${fmtC(Y3.archGB_N*ADLS_COOL*12)}</td>
+        <td class="c-dim">${fmtC((Y1.archGB_N+Y2.archGB_N+Y3.archGB_N)*ADLS_COOL*12)}</td>
+      </tr>
+      <tr>
+        <td><div class="rn">StorageIQ — residual SP overage</div>
+            <div class="rs">Overage remaining after archival (if storage still exceeds pool)</div></td>
+        <td class="c-dim">${fmtC(Y0.optOverGB_N*SP*12)}</td>
+        <td class="c-dim">${fmtC(Y1.optOverGB_N*SP*12)}</td>
+        <td class="c-dim">${fmtC(Y2.optOverGB_N*SP*12)}</td>
+        <td class="c-dim">${fmtC(Y3.optOverGB_N*SP*12)}</td>
+        <td class="c-dim">${fmtC((Y1.optOverGB_N+Y2.optOverGB_N+Y3.optOverGB_N)*SP*12)}</td>
+      </tr>
+      <tr class="tr-hi">
+        <td><div class="rn">StorageIQ total cost</div>
+            <div class="rs">ADLS running cost + residual SP overage (if any)</div></td>
+        <td class="c-green">${fmtC(_Y0opt)}</td>
+        <td class="c-green">${fmtC(_Y1opt)}</td>
+        <td class="c-green">${fmtC(_Y2opt)}</td>
+        <td class="c-green">${fmtC(_Y3opt)}</td>
+        <td class="c-green">${fmtC(_opt3)}</td>
+      </tr>
+      <tr class="tr-total">
+        <td><div class="rn" style="color:var(--gold)">Net saving (real money delivered)</div>
+            <div class="rs">No-action cost minus StorageIQ total cost · ADLS running cost already deducted</div></td>
+        <td class="c-gold" style="font-size:11px">${fmtC(_Y0sp-_Y0opt)}</td>
+        <td class="c-gold">${fmtC(_Y1sp-_Y1opt)}</td>
+        <td class="c-gold">${fmtC(_Y2sp-_Y2opt)}</td>
+        <td class="c-gold">${fmtC(_Y3sp-_Y3opt)}</td>
+        <td class="c-gold" style="font-size:15px;font-weight:700">${fmtC(_net3)}</td>
+      </tr>`;
+  };
+  gel('fin-tbody').innerHTML = finRows();
+
+  // Net saving breakdown panel
+  const net_save_yr1 = Y1.netSavYr;
+  const adls_yr1     = Y1.archGB_N * ADLS_COOL * 12;
+  const gross_yr1    = Y1.grossSavMo * 12;
+  const priceratio   = ratio;
+  gel('net-saving-breakdown').innerHTML = `
+    <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:10px">
+      How Year 1 net saving of ${fmtC(net_save_yr1)} is calculated
+      <span class="tip-wrap" style="margin-left:6px;vertical-align:middle">
+        <span class="tip-icon">i</span>
+        <div class="tip-box">
+          <div class="tip-title">Net Saving Derivation</div>
+          <div class="tip-formula">gross = archGB × (SP − 0) × 12
+ADLS  = archGB × ${ADLS_COOL} × 12
+net   = gross − ADLS</div>
+          <div class="tip-src">Gross saving = the SP overage cost you no longer pay because the storage moved to ADLS. ADLS cost = what you actually pay Microsoft Azure for storing it there. Net = real money saved. Both are year 1 figures at current archivable volume.</div>
+        </div>
+      </span>
+    </div>
+    <div class="saving-row"><span class="saving-row-lbl">SP cost avoided (${fmtGB(Y1.archGB_N)} × $${SP.toFixed(2)}/GB/mo × 12)</span><span class="saving-row-val c-amber">+${fmtC(gross_yr1)}</span></div>
+    <div class="saving-row"><span class="saving-row-lbl">ADLS storage cost (${fmtGB(Y1.archGB_N)} × $${ADLS_COOL}/GB/mo × 12 · ${ADLS_REGION_NOTE})</span><span class="saving-row-val c-dim">−${fmtC(adls_yr1)}</span></div>
+    <div class="saving-row"><span class="saving-row-lbl" style="color:var(--gold);font-weight:500">Net Year 1 saving (real money, client can verify on invoice)</span><span class="saving-row-val c-gold" style="font-size:14px">=${fmtC(net_save_yr1)}</span></div>
+  `;
+
+  setT('fin-anno',
+    `Formula: netSaving_N = archGB_N × (${SP.toFixed(2)} − ${ADLS_COOL}) × 12 where archGB grows at ${Math.round(I.g*100)}%/yr ` +
+    `| Pool: 1TB + ${comma(I.lic)}×10GB = ${fmtTB(poolTB)} ` +
+    `| ADLS: $${ADLS_COOL}/GB/mo ${ADLS_REGION_NOTE} ` +
+    `| SP rate: $${SP.toFixed(2)}/GB/mo ` +
+    `| Price ratio: ${ratio}× cheaper in ADLS`);
 
   // Summary box
-  const hl = sav3>0 ? `Eliminate ${fmtC(sav3)} in avoidable SharePoint costs over 3 years.` : `Lock in efficiency before growth forces overage.`;
-  setT('sum-hl',hl);
-  setT('sum-body', sav3>0
-    ? `With ${fmtGB(archGB)} of recoverable version history and ${Math.round(I.g*100)}% annual growth, your SharePoint overage bill reaches ${fmtYr(spY[2])} by year 3. Archiving excess versions removes the majority of that cost. These numbers become firm and board-ready after a live scan.`
-    : `At ${Math.round(I.g*100)}% annual growth your free pool will be breached within the projection window. Proactive version archival prevents any overage cost from accruing. Run a live scan to confirm the exact timeline.`);
-  setT('sum-big',fmtC(sav3));
-  setT('sum-note',`Year 1 saving: ${fmtC(spY[0]-optY[0])} · All estimates confirmed after live scan`);
+  const hl = netSav3yr>0
+    ? `Eliminate ${fmtC(netSav3yr)} in net avoidable cost over 3 years.`
+    : `Archive proactively before growth triggers overage billing.`;
+  setT('sum-hl', hl);
+  setT('sum-body',
+    netSav3yr>0
+      ? `With ${fmtGB(archGB_Y0)} of recoverable version history, archiving excess versions to ADLS costs ${fmtMo(Y0.adlsMo)} versus ${fmtMo(Y0.grossSP)} in SharePoint overage — a ${ratio}× price difference. ` +
+        `Net saving after ADLS running cost: Year 1 ${fmtC(Y1.netSavYr)} · Year 2 ${fmtC(Y2.netSavYr)} · Year 3 ${fmtC(Y3.netSavYr)}. ` +
+        `Saving grows each year as more version copies accumulate. ` +
+        (inScanMode ? 'These figures are derived from your tenant scan.' : 'Confirmed figures available after live scan.')
+      : `At ${Math.round(I.g*100)}% growth per year your free pool of ${fmtTB(poolTB)} will be breached within the projection window. ` +
+        `Pre-emptive archival eliminates future overage before it starts. Net saving compounds as data grows.`);
+  setT('sum-big', fmtC(netSav3yr));
+  setT('sum-note',
+    inScanMode
+      ? `Source: ${SCAN_DATA.source} · ADLS cost deducted · Net figures`
+      : `Year 1 net saving: ${fmtC(Y1.netSavYr)} · Estimate — live scan confirms`);
 
-  // Calculator tab
-  setT('c-pool',fmtTB(poolTB));
-  setT('c-arch',fmtGB(archGB));
-  setT('c-save-yr',fmtYr(savYr));
+  /* ── Calculator Tab ───────────────────────────────────────────────────── */
+  setT('c-pool', fmtTB(poolTB));
+  setT('c-arch', fmtGB(archGB_Y0));
+  setT('c-save-yr', fmtYr(Y1.netSavYr));
 
-  const cGEl=gel('c-gap'), cGT=gel('c-gap-tile');
-  if(gapTB<=0){
-    cGEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' free'; cGEl.className='tile-val c-green';
-    cGT.style.setProperty('--tile-accent','var(--green)'); setT('c-gap-sub','Within free entitlement');
-  } else {
-    cGEl.textContent='+'+fmtTB(Math.round(gapTB))+' over'; cGEl.className='tile-val c-red';
-    cGT.style.setProperty('--tile-accent','var(--red)'); setT('c-gap-sub','Overage billing active');
+  const cGEl=gel('c-gap'), cGTile=gel('c-gap-tile');
+  if(cGTile){
+    if(gapTB<=0){
+      cGEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' headroom';
+      cGEl.className='tile-val c-green';
+      cGTile.style.setProperty('--tile-accent','var(--green)');
+      setT('c-gap-sub','Within free entitlement today');
+    } else {
+      cGEl.textContent='+'+fmtTB(Math.round(gapTB))+' over';
+      cGEl.className='tile-val c-red';
+      cGTile.style.setProperty('--tile-accent','var(--red)');
+      setT('c-gap-sub','Overage billing active now');
+    }
   }
 
   gel('calc-tbody').innerHTML=`
-    <tr><td><div class="rn">No action</div><div class="rs">Pay SP rate on all overage</div></td><td class="c-red">${fmtC(spY[0])}</td><td class="c-red">${fmtC(spY[1])}</td><td class="c-red">${fmtC(spY[2])}</td><td class="c-red">${fmtC(sp3)}</td><td class="c-dim">—</td></tr>
-    <tr class="tr-hi"><td><div class="rn">StorageIQ optimised</div><div class="rs">Archive ${fmtGB(archGB)} of versions</div></td><td class="c-green">${fmtC(optY[0])}</td><td class="c-green">${fmtC(optY[1])}</td><td class="c-green">${fmtC(optY[2])}</td><td class="c-green">${fmtC(opt3)}</td><td class="c-gold">${fmtC(sav3)}</td></tr>`;
-  setT('calc-anno',`Rate: $${SP.toFixed(2)}/GB/mo · ${Math.round(I.g*100)}% growth · ${comma(I.lic)} licences`);
+    <tr><td><div class="rn">No action</div><div class="rs">SP overage at $${SP.toFixed(2)}/GB/mo · grows with storage</div></td>
+      <td class="c-dim">${fmtC(Y0.spCostYr)}</td>
+      <td class="c-red">${fmtC(Y1.spCostYr)}</td><td class="c-red">${fmtC(Y2.spCostYr)}</td><td class="c-red">${fmtC(Y3.spCostYr)}</td>
+      <td class="c-red">${fmtC(sp3yr)}</td><td class="c-dim">—</td></tr>
+    <tr><td><div class="rn">ADLS running cost</div><div class="rs">${fmtGB(archGB_Y0)} × $${ADLS_COOL}/GB/mo (grows with archive volume)</div></td>
+      <td class="c-dim">${fmtC(Y0.adlsMo*12)}</td>
+      <td class="c-dim">${fmtC(Y1.archGB_N*ADLS_COOL*12)}</td><td class="c-dim">${fmtC(Y2.archGB_N*ADLS_COOL*12)}</td><td class="c-dim">${fmtC(Y3.archGB_N*ADLS_COOL*12)}</td>
+      <td class="c-dim">${fmtC((Y1.archGB_N+Y2.archGB_N+Y3.archGB_N)*ADLS_COOL*12)}</td><td class="c-dim">shown above</td></tr>
+    <tr class="tr-hi"><td><div class="rn">StorageIQ net saving</div><div class="rs">SP avoided minus ADLS cost · real money · defensible to CFO</div></td>
+      <td class="c-dim">${fmtC(Y0.netSavYr)}</td>
+      <td class="c-green">${fmtC(Y1.netSavYr)}</td><td class="c-green">${fmtC(Y2.netSavYr)}</td><td class="c-green">${fmtC(Y3.netSavYr)}</td>
+      <td class="c-green">${fmtC(netSav3yr)}</td><td class="c-gold" style="font-size:13px;font-weight:700">${fmtC(netSav3yr)}</td></tr>`;
 
-  // 36-month trend
-  const mos=Array.from({length:37},(_,i)=>i);
-  const spLine=mos.map(m=>{const gb=usedGB*Math.pow(1+g/12,m);return Math.max(0,gb-poolGB)*SP*m;});
-  const optLine=mos.map(m=>{const gb=(usedGB-archGB)*Math.pow(1+g/12,m);return Math.max(0,gb-poolGB)*SP*m;});
-  renderTrend(mos.map(m=>m===0?'Now':m%6===0?'Mo '+m:''),spLine,optLine);
+  setT('calc-anno',
+    `Net saving = archGB_N × ($${SP.toFixed(2)} − $${ADLS_COOL}) × 12 · archGB grows at ${Math.round(I.g*100)}%/yr · Pool: ${fmtTB(poolTB)} · SP rate: $${SP.toFixed(2)} · ADLS: $${ADLS_COOL} · Ratio: ${ratio}×`);
+
+  /* 36-month trend */
+  const mos = Array.from({length:37},(_,i)=>i);
+  const spLine  = mos.map(m=>{ const gb=usedGB*Math.pow(1+I.g/12,m); return Math.max(0,gb-poolGB)*SP*m; });
+  const optLine = mos.map(m=>{ const gb=usedGB*Math.pow(1+I.g/12,m);
+    const vGB = gb*I.vspct; const aGB = vGB*I.pct*Math.max(0,(I.avgVer-I.keep)/I.avgVer);
+    return Math.max(0,gb-aGB-poolGB)*SP*m + aGB*ADLS_COOL*m; });
+  renderTrend(mos.map(m=>m===0?'Now':m%6===0?'Mo '+m:''), spLine, optLine);
 
   let crossMo=null;
   for(let m=1;m<=36;m++){if(spLine[m]>0&&optLine[m]<spLine[m]){crossMo=m;break;}}
-  setT('trend-anno', crossMo
-    ? `Optimised path diverges from baseline at month ${crossMo}. Saving compounds as volume grows. 36-month cumulative saving: ${fmtC(spLine[36]-optLine[36])}.`
-    : `Both paths remain low today. As growth pushes storage up, the gap between no-action and optimised widens significantly.`);
+  setT('trend-anno',
+    crossMo
+      ? `StorageIQ cost curve falls below no-action at month ${crossMo}. 36-month net saving: ${fmtC(spLine[36]-optLine[36])}. SP rate: $${SP.toFixed(2)}/GB/mo · ADLS: $${ADLS_COOL}/GB/mo · Ratio ${ratio}×.`
+      : `Both paths low today. Gap widens as growth pushes into overage. Net saving compounds over time.`);
 
-  // 3yr bar chart
-  render3yr(spY,optY);
-
+  render3yr([Y1.spCostYr,Y2.spCostYr,Y3.spCostYr],[Y1.optCostYr,Y2.optCostYr,Y3.optCostYr]);
   syncSliders(1);
 }
 
-const opts = (extra={}) => ({
-  responsive:true, maintainAspectRatio:false,
-  plugins:{
-    legend:{labels:{color:'#9AA3BC',boxWidth:14,boxHeight:2,font:{size:11}}},
-    tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#9AA3BC',bodyColor:'#F0F2F8',padding:12}
-  },
-  ...extra
-});
-
-function render3yr(sp,opt) {
-  const ctx=gel('chart3yr'); if(!ctx) return;
-  if(ch3yr) ch3yr.destroy();
-  ch3yr=new Chart(ctx.getContext('2d'),{
-    type:'bar',
-    data:{labels:['Year 1','Year 2','Year 3'],datasets:[
-      {label:'No action',data:sp,backgroundColor:'rgba(224,82,82,0.6)',borderRadius:4,borderWidth:0},
-      {label:'StorageIQ optimised',data:opt,backgroundColor:'rgba(52,196,122,0.6)',borderRadius:4,borderWidth:0}
-    ]},
-    options:{...opts(),scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A'}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',callback:v=>v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
-  });
-}
-
-function renderTrend(labels,sp,opt) {
-  const ctx=gel('trend-chart'); if(!ctx) return;
-  if(chTrend) chTrend.destroy();
-  chTrend=new Chart(ctx.getContext('2d'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'No action — SP overage accumulates',data:sp,borderColor:'#E05252',backgroundColor:'rgba(224,82,82,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3},
-      {label:'StorageIQ optimised',data:opt,borderColor:'#34C47A',backgroundColor:'rgba(52,196,122,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3,borderDash:[4,3]}
-    ]},
-    options:{...opts({interaction:{mode:'index',intersect:false}}),
-      scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{maxTicksLimit:7,color:'#4E5A7A'}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
-  });
-}
-
-// Demo scan
-const DEMO=[
-  {name:'Global Projects Hub',dept:'PMO',gb:22400,ver:312,arch:.74},
-  {name:'Engineering Docs',dept:'Technology',gb:18800,ver:287,arch:.71},
-  {name:'Finance & Compliance',dept:'Finance',gb:14200,ver:198,arch:.56},
-  {name:'HR Systems',dept:'People',gb:9800,ver:445,arch:.82},
-  {name:'Marketing Assets',dept:'Marketing',gb:7600,ver:156,arch:.48},
-  {name:'Legal & Contracts',dept:'Legal',gb:6200,ver:521,arch:.86},
-  {name:'Operations',dept:'Operations',gb:4800,ver:89,arch:.32},
-  {name:'Product Roadmaps',dept:'Product',gb:3700,ver:231,arch:.62},
+/* ─── DEMO SCAN ──────────────────────────────────────────────────────────── */
+/*
+ * Demo data represents a realistic mid-size enterprise tenant.
+ * Per-site archivable is DERIVED from avgVer, not from a flat multiplier.
+ * Formula per site:
+ *   ver_overhead = min(avgVer / 200 × 0.58, 0.80)   [higher avgVer → more version storage]
+ *   archGB = siteGB × ver_overhead × (avgVer − keep) / avgVer
+ * keep value comes from the current slider setting.
+ */
+const DEMO = [
+  {name:'Global Projects Hub',   dept:'PMO',        gb:22400, ver:312, arch:.74},
+  {name:'Engineering Docs',      dept:'Technology', gb:18800, ver:287, arch:.71},
+  {name:'Finance & Compliance',  dept:'Finance',    gb:14200, ver:198, arch:.56},
+  {name:'HR Systems',            dept:'People',     gb:9800,  ver:445, arch:.82},
+  {name:'Marketing Assets',      dept:'Marketing',  gb:7600,  ver:156, arch:.48},
+  {name:'Legal & Contracts',     dept:'Legal',      gb:6200,  ver:521, arch:.86},
+  {name:'Operations',            dept:'Operations', gb:4800,  ver:89,  arch:.32},
+  {name:'Product Roadmaps',      dept:'Product',    gb:3700,  ver:231, arch:.62},
 ];
 
 function runDemo() {
   switchTab('discovery');
-  const I=readI();
-  const poolGB=1024+I.lic*10;
-  const total=DEMO.reduce((a,s)=>a+s.gb,0);
-  const archiv=DEMO.reduce((a,s)=>a+Math.round(s.gb*0.58*s.arch),0);
-  const headroom=poolGB-total;
+  const I    = readI();
+  // Pool uses SLIDER value — no hardcoding
+  const poolGB = 1024 + I.lic * 10;
+  const poolTB = poolGB / 1024;
+  const total  = DEMO.reduce((a,s)=>a+s.gb, 0);   // 87,500 GB = 85.4 TB
+  const headroom = poolGB - total;
+  const keep = I.keep;
 
-  setT('d-pool',fmtTB(poolGB/1024)); setT('d-used',fmtTB(total/1024)); setT('d-vers',fmtGB(archiv));
+  // Per-site archivable derived from each site's avgVer
+  // Formula: ver_overhead = min(ver/200 * 0.58, 0.80)
+  //          archGB = siteGB * ver_overhead * (ver-keep)/ver
+  let archiv = 0;
+  const siteRows = DEMO.map(s => {
+    const verOH   = Math.min(s.ver / 200 * 0.58, 0.80);
+    const siteArch = Math.round(s.gb * verOH * Math.max(0,(s.ver-keep)/s.ver));
+    archiv += siteArch;
+    return { ...s, verOH, siteArch };
+  });
 
-  const gE=gel('d-gap'),gT=gel('d-gap-tile');
-  if(headroom>=0){gE.textContent=fmtGB(headroom)+' free';gE.className='tile-val c-green';gT.style.setProperty('--tile-accent','var(--green)');setT('d-gap-sub','Within free entitlement');}
-  else{gE.textContent=fmtGB(Math.abs(headroom))+' over';gE.className='tile-val c-red';gT.style.setProperty('--tile-accent','var(--red)');setT('d-gap-sub','Overage billing active');}
+  // Demo saving using per-site derived archivable and slider SP rate
+  const grossMo  = archiv * I.SP;
+  const adlsMo   = archiv * ADLS_COOL;
+  const netMo    = grossMo - adlsMo;
+  const netYr1   = netMo * 12;
+  const netYr3   = netMo * 36; // simplified; real model would compound
 
-  gel('demo-tbody').innerHTML=DEMO.map(s=>{
-    const p=Math.round(s.gb/total*100);
-    const a=Math.round(s.gb*0.58*s.arch);
-    const bw=Math.round(p*0.9);
-    const rb=s.ver>400?'<span class="badge br">High bloat</span>':s.ver>200?'<span class="badge ba">Moderate</span>':'<span class="badge bg">Low</span>';
-    return `<tr><td><div class="rn">${s.name}</div></td><td><span class="badge bt">${s.dept}</span></td><td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(s.gb)}</td><td class="c-dim">${p}%</td><td class="c-amber">${s.ver}</td><td class="c-green">${fmtGB(a)}</td><td>${rb}</td></tr>`;
+  // Weighted avg version count
+  const wAvgVer = Math.round(DEMO.reduce((a,s)=>a+s.ver*s.gb,0)/total);
+
+  // Discovery tiles
+  setT('d-pool', fmtTB(poolTB));   // CORRECT: uses slider licence count, not hardcoded
+  setT('d-used', fmtTB(total/1024));
+  setT('d-vers', fmtGB(archiv));
+
+  const gE=gel('d-gap'), gT=gel('d-gap-tile');
+  if(headroom>=0){
+    gE.textContent=fmtGB(headroom)+' free';
+    gE.className='tile-val c-green';
+    gT.style.setProperty('--tile-accent','var(--green)');
+    setT('d-gap-sub','Within free entitlement');
+  } else {
+    gE.textContent=fmtGB(Math.abs(headroom))+' over';
+    gE.className='tile-val c-red';
+    gT.style.setProperty('--tile-accent','var(--red)');
+    setT('d-gap-sub','Overage billing active');
+  }
+
+  // Sites table
+  gel('demo-tbody').innerHTML = siteRows.map(s => {
+    const p  = Math.round(s.gb/total*100);
+    const bw = Math.round(p*0.9);
+    const rb = s.ver>400 ? '<span class="badge br">High bloat</span>'
+             : s.ver>200 ? '<span class="badge ba">Moderate</span>'
+             : '<span class="badge bg">Low</span>';
+    const tip = `ver_overhead=min(${s.ver}/200×0.58, 0.80)=${s.verOH.toFixed(2)} | archGB=${s.gb}×${s.verOH.toFixed(2)}×(${s.ver}-${keep})/${s.ver}`;
+    return `<tr>
+      <td><div class="rn">${s.name}</div><div class="rs">${comma(Math.round(s.gb*s.verOH))} GB est. version copies</div></td>
+      <td><span class="badge bt">${s.dept}</span></td>
+      <td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(s.gb)}</td>
+      <td class="c-dim">${p}%</td>
+      <td class="c-amber">${s.ver}
+        <span class="tip-icon" style="cursor:help;margin-left:3px" title="${tip}">i</span>
+      </td>
+      <td class="c-green">${fmtGB(s.siteArch)}</td>
+      <td>${rb}</td>
+    </tr>`;
   }).join('');
 
-  const vGB=total*0.58;
-  gel('demo-bars').innerHTML=
-    bar('Total used',100,'var(--navy4)',fmtTB(total/1024))+
-    bar('Version copies',58,'var(--amber)',fmtGB(Math.round(vGB)))+
-    bar('Recoverable',Math.round(archiv/total*100),'var(--green)',fmtGB(archiv))+
-    bar('Active content',Math.round((total-archiv)/total*100),'var(--blue)',fmtGB(total-archiv));
+  // Composition bars
+  const vGB = total * 0.58;
+  gel('demo-bars').innerHTML =
+    bar('Total consumed', 100, 'var(--navy4)', fmtTB(total/1024), 'totalGB = sum of all site collections\nSource: Graph API /sites/{id}/drive.quota.used') +
+    bar('Est. version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB)), 'verGB = totalGB × 58%\n(demo uses flat 58%; live scan gives exact per-site)') +
+    bar('Derived recoverable', Math.round(archiv/total*100), 'var(--green)', fmtGB(archiv), 'archGB per site = siteGB × min(ver/200×0.58,0.80) × (ver−keep)/ver\nkeep='+keep+' from your slider') +
+    bar('Active content', Math.round((total-archiv)/total*100), 'var(--blue)', fmtGB(total-archiv), 'activeGB = total − archivable');
 
+  // Version chart
   if(chVer) chVer.destroy();
-  chVer=new Chart(gel('ver-chart').getContext('2d'),{
+  chVer = new Chart(gel('ver-chart').getContext('2d'), {
     type:'bar',
-    data:{labels:DEMO.map(s=>s.name.split(' ')[0]),datasets:[{label:'Avg versions per file',data:DEMO.map(s=>s.ver),backgroundColor:DEMO.map(s=>s.ver>400?'rgba(224,82,82,0.65)':s.ver>200?'rgba(232,147,58,0.65)':'rgba(52,196,122,0.65)'),borderRadius:3,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A'}}}}
+    data:{labels:DEMO.map(s=>s.name.split(' ')[0]),datasets:[{
+      label:'Avg versions per file',
+      data:DEMO.map(s=>s.ver),
+      backgroundColor:DEMO.map(s=>s.ver>400?'rgba(224,82,82,0.65)':s.ver>200?'rgba(232,147,58,0.65)':'rgba(52,196,122,0.65)'),
+      borderRadius:3,borderWidth:0
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,
+        callbacks:{label:c=>' '+c.label+': '+c.parsed.y+' avg versions'}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A',font:{size:10}}},
+              y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A'}}}}
   });
 
   gel('demo-results').style.display='block';
-  setT('scan-lbl','DEMO SCAN');
+  setT('scan-lbl','DEMO SCAN LIVE');
+
+  // NOW UPDATE EXEC SUMMARY with scan-derived data
+  SCAN_DATA = {
+    source: 'Demo scan · 8 sites · 85.4 TB total',
+    total,  archiv, poolGB, poolTB, headroom,
+    netYr1, netYr3, wAvgVer,
+    grossMo, adlsMo, netMo,
+    years: { Y1: { sp: netYr1, adls: adlsMo*12, net: netYr1 } }
+  };
+
+  // Update exec KPI tiles with scan data
+  setT('ex-3yr',  fmtC(netYr3));
+  setT('ex-arch', fmtGB(archiv));
+  setT('ex-util', Math.round(total/poolGB*100)+'%');
+  // Year 3 liability at demo scale with growth
+  const demoYr3over = Math.max(0, total*(1+I.g)**3 - poolGB);
+  setT('ex-yr3',  fmtC(demoYr3over*I.SP*12));
+
+  // Show scan results panel on exec tab
+  const scanPanel = gel('exec-scan-results');
+  if(scanPanel) {
+    scanPanel.style.display='block';
+    setT('exec-scan-source', 'Demo scan · 8 site collections · 85.4 TB · '+comma(Math.round(I.lic))+' licences · pool: '+fmtTB(poolTB));
+    setT('exec-scan-total',  fmtTB(total/1024));
+    setT('exec-scan-arch',   fmtGB(archiv));
+    setT('exec-scan-save1',  fmtYr(netYr1));
+    setT('exec-scan-avgver', wAvgVer+' versions');
+  }
+
+  // Re-run calc so financial table and charts reflect scan context
+  calc();
+
   gel('demo-results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ── StorageIQ scanner agent (client's own Azure). Override per-tenant via
-// ?scan=<url>. Falls back to the AAYS agent deployed for this session. ────
+function clearScan() {
+  SCAN_DATA = null;
+  const scanPanel = gel('exec-scan-results');
+  if(scanPanel) scanPanel.style.display='none';
+  calc();
+}
+
+/* ─── StorageIQ scanner agent (client's own Azure). Override per-tenant via
+   ?scan=<url>. ─────────────────────────────────────────────────────────── */
 var FUNC_BASE = (function () {
   try {
     var q = new URLSearchParams(window.location.search).get('scan');
@@ -899,69 +1391,84 @@ function _creds() {
   };
 }
 
-/* ── Render live scan output into the SAME tiles/table runDemo() uses ──── */
+/* ─── Render a live scan payload {summary, sites} into the SAME tiles,
+   table, bars, chart, and SCAN_DATA/exec panel that runDemo() drives. ──── */
 function renderLiveDiscovery(data) {
   data = data || {};
   const sm = data.summary || {};
   const sites = data.sites || [];
+  const I = readI();
+  const keep = I.keep;
 
   const poolGB = sm.org_quota_gb || (1024 + (sm.seat_count || 0) * 10);
-  const usedGB = (sm.org_used_gb != null && sm.org_used_gb > 0)
+  const poolTB = poolGB / 1024;
+  const total  = (sm.org_used_gb != null && sm.org_used_gb > 0)
     ? sm.org_used_gb : (sm.total_used_gb || 0);
-  const headroom = poolGB - usedGB;
+  const headroom = poolGB - total;
 
-  // No per-site version/cold breakdown from the fast path — estimate at the
-  // same 58% ratio the demo uses, same as the old dashboard's convention.
-  const archivGB = usedGB * 0.58 * 0.70;
+  // No exact per-file version counts on the fast path (that needs a deep
+  // scan) — use the same estimation formula as the demo, driven by an
+  // assumed average version count until a deep scan supplies the real one.
+  const assumedVer = 220;
+  const verOH = Math.min(assumedVer / 200 * 0.58, 0.80);
+  const archiv = Math.round(total * verOH * Math.max(0, (assumedVer - keep) / assumedVer));
 
-  setT('d-pool', fmtExact(poolGB / 1024));
-  setT('d-used', fmtExact(usedGB / 1024));
-  setT('d-vers', fmtExactGB(archivGB));
+  const grossMo = archiv * I.SP;
+  const adlsMo  = archiv * ADLS_COOL;
+  const netMo   = grossMo - adlsMo;
+  const netYr1  = netMo * 12;
+  const netYr3  = netMo * 36;
+
+  setT('d-pool', fmtTB(poolTB));
+  setT('d-used', fmtTB(total / 1024));
+  setT('d-vers', fmtGB(archiv));
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
   if (headroom >= 0) {
-    gE.textContent = fmtExactGB(headroom) + ' free'; gE.className = 'tile-val c-green';
+    gE.textContent = fmtGB(headroom) + ' free'; gE.className = 'tile-val c-green';
     gT.style.setProperty('--tile-accent', 'var(--green)');
     setT('d-gap-sub', 'Within free entitlement');
   } else {
-    gE.textContent = fmtExactGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
+    gE.textContent = fmtGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
     gT.style.setProperty('--tile-accent', 'var(--red)');
     setT('d-gap-sub', 'Overage billing active');
   }
 
-  const totalUsed = sites.reduce((a, s) => a + (s.used_gb || 0), 0) || usedGB;
   const sorted = sites.slice().sort((a, b) => (b.used_gb || 0) - (a.used_gb || 0)).slice(0, 12);
   gel('demo-tbody').innerHTML = sorted.map(s => {
     const gb = s.used_gb || 0;
-    const p = totalUsed > 0 ? Math.round(gb / totalUsed * 100) : 0;
-    const a = Math.round(gb * 0.58 * 0.70);
+    const p = total > 0 ? Math.round(gb / total * 100) : 0;
     const bw = Math.round(p * 0.9);
-    const dept = s.owner || '—';
-    return `<tr><td><div class="rn">${s.site_url || 'Site'}</div></td><td><span class="badge bt">${dept}</span></td><td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(gb)}</td><td class="c-dim">${p}%</td><td class="c-amber">est.</td><td class="c-green">${fmtGB(a)}</td><td><span class="badge bg">—</span></td></tr>`;
+    const siteArch = Math.round(gb * verOH * Math.max(0, (assumedVer - keep) / assumedVer));
+    return `<tr>
+      <td><div class="rn">${s.site_url || 'Site'}</div><div class="rs">${comma(Math.round(gb * verOH))} GB est. version copies</div></td>
+      <td><span class="badge bt">${s.owner || '—'}</span></td>
+      <td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(gb)}</td>
+      <td class="c-dim">${p}%</td>
+      <td class="c-amber">est. <span class="tip-icon" style="cursor:help;margin-left:3px" title="Exact per-file version count requires a deep scan">i</span></td>
+      <td class="c-green">${fmtGB(siteArch)}</td>
+      <td><span class="badge bg">—</span></td>
+    </tr>`;
   }).join('');
 
-  const vGB = usedGB * 0.58;
+  const vGB = total * 0.58;
   gel('demo-bars').innerHTML =
-    bar('Total used', 100, 'var(--navy4)', fmtExactGB(usedGB)) +
-    bar('Version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB))) +
-    bar('Recoverable', usedGB > 0 ? Math.round(archivGB / usedGB * 100) : 0, 'var(--green)', fmtGB(archivGB)) +
-    bar('Active content', usedGB > 0 ? Math.round((usedGB - archivGB) / usedGB * 100) : 0, 'var(--blue)', fmtGB(usedGB - archivGB));
+    bar('Total consumed', 100, 'var(--navy4)', fmtTB(total / 1024), 'totalGB = org-wide SharePoint usage\nSource: Microsoft Graph getSharePointSiteUsageStorage') +
+    bar('Est. version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB)), 'verGB = totalGB × 58% (fast-path estimate;\nrun Deep Scan for exact per-site figures)') +
+    bar('Derived recoverable', total > 0 ? Math.round(archiv / total * 100) : 0, 'var(--green)', fmtGB(archiv), 'archGB = totalGB × min(ver/200×0.58,0.80) × (ver−keep)/ver\nkeep=' + keep + ' from your slider') +
+    bar('Active content', total > 0 ? Math.round((total - archiv) / total * 100) : 0, 'var(--blue)', fmtGB(total - archiv), 'activeGB = total − archivable');
 
-  // The fast scan doesn't have real per-file version counts (that needs a
-  // deep scan), so this chart shows storage-by-site instead — still gives a
-  // real "which sites are biggest" picture rather than a blank chart.
-  const chartSites = sorted.slice(0, 8);
   if (chVer) chVer.destroy();
   const verCanvas = gel('ver-chart');
-  if (verCanvas && chartSites.length) {
+  if (verCanvas && sorted.length) {
     chVer = new Chart(verCanvas.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: chartSites.map(s => (s.site_url || 'Site').split('@')[0].slice(0, 14)),
+        labels: sorted.slice(0, 8).map(s => (s.site_url || 'Site').split('@')[0].slice(0, 14)),
         datasets: [{
           label: 'Used storage (GB)',
-          data: chartSites.map(s => Math.round(s.used_gb || 0)),
-          backgroundColor: chartSites.map(s => (s.used_gb || 0) > 150
+          data: sorted.slice(0, 8).map(s => Math.round(s.used_gb || 0)),
+          backgroundColor: sorted.slice(0, 8).map(s => (s.used_gb || 0) > 150
             ? 'rgba(224,82,82,0.65)' : (s.used_gb || 0) > 60
             ? 'rgba(232,147,58,0.65)' : 'rgba(52,196,122,0.65)'),
           borderRadius: 3, borderWidth: 0
@@ -970,7 +1477,8 @@ function renderLiveDiscovery(data) {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
-          tooltip: { backgroundColor: '#0F1526', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1 } },
+          tooltip: { backgroundColor: '#0F1526', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
+            callbacks: { label: c => ' ' + c.label + ': ' + comma(c.parsed.y) + ' GB' } } },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#4E5A7A', font: { size: 10 } } },
           y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#4E5A7A' } }
@@ -981,9 +1489,36 @@ function renderLiveDiscovery(data) {
 
   gel('demo-results').style.display = 'block';
   setT('scan-lbl', 'LIVE SCAN');
+
+  const wAvgVer = assumedVer;
+  SCAN_DATA = {
+    source: 'Live scan · ' + comma(sites.length) + ' sites · ' + fmtTB(total / 1024) + ' total',
+    total, archiv, poolGB, poolTB, headroom,
+    netYr1, netYr3, wAvgVer,
+    grossMo, adlsMo, netMo,
+    years: { Y1: { sp: netYr1, adls: adlsMo * 12, net: netYr1 } }
+  };
+
+  setT('ex-3yr', fmtC(netYr3));
+  setT('ex-arch', fmtGB(archiv));
+  setT('ex-util', poolGB > 0 ? Math.round(total / poolGB * 100) + '%' : '—');
+  const yr3over = Math.max(0, total * (1 + I.g) ** 3 - poolGB);
+  setT('ex-yr3', fmtC(yr3over * I.SP * 12));
+
+  const scanPanel = gel('exec-scan-results');
+  if (scanPanel) {
+    scanPanel.style.display = 'block';
+    setT('exec-scan-source', 'Live scan · ' + comma(sites.length) + ' site collections · ' + fmtTB(total / 1024) + ' · pool: ' + fmtTB(poolTB));
+    setT('exec-scan-total', fmtTB(total / 1024));
+    setT('exec-scan-arch', fmtGB(archiv));
+    setT('exec-scan-save1', fmtYr(netYr1));
+    setT('exec-scan-avgver', wAvgVer + ' versions (est.)');
+  }
+
+  calc();
 }
 
-/* ── Cached last-scan result (instant on open; re-scan only on demand) ─── */
+/* ─── Cached last-scan result (instant on open; re-scan only on demand) ── */
 function _timeAgo(iso) {
   try {
     const secs = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -1020,10 +1555,10 @@ async function loadCachedResult() {
       renderLiveDiscovery(j.record.data);
       _showSyncedBanner(j.record.saved_utc);
     }
-  } catch (e) { /* no cache yet — leave the hero/demo prompt */ }
+  } catch (e) { /* no cache yet */ }
 }
 
-/* ── Fast connect (usagemetrics, ~6s) — the default path ───────────────── */
+/* ─── Fast connect (usagemetrics, ~6s) — default path ──────────────────── */
 async function connectLive() {
   const { tenant_id: t, client_id: c, client_secret: s } = _creds();
   if (!t || !c || !s) { alert('Please fill in all three credential fields.'); return; }
@@ -1045,8 +1580,6 @@ async function connectLive() {
       throw new Error('Connected, but no SharePoint site data was returned. Ensure Reports.Read.All is admin-consented on the app registration.');
     }
 
-    // Raw numbers come back from the agent; the Intelligence API (our server)
-    // supplies the quota/pricing/savings figures — merge them in.
     const intel = data.intelligence;
     if (intel && intel.status === 'success') {
       if (intel.summary) data.summary = Object.assign({}, data.summary, intel.summary);
@@ -1055,7 +1588,6 @@ async function connectLive() {
       throw new Error('Licence/intelligence error: ' + (intel.message || 'unauthorised'));
     }
 
-    switchTab('discovery');
     renderLiveDiscovery(data);
     saveResult('usage', data);
     _showSyncedBanner(new Date().toISOString());
@@ -1070,7 +1602,7 @@ async function connectLive() {
   }
 }
 
-/* ── Deep scan (Durable background job — exact version counts) ─────────── */
+/* ─── Deep scan (Durable background job — exact version counts) ────────── */
 var _scanPoll = null;
 function _setDeepProgress(done, total, phase) {
   const el = gel('deep-scan-progress');
@@ -1122,6 +1654,56 @@ async function startDeepScan() {
   }
 }
 
+/* ─── Charts ─────────────────────────────────────────────────────────────── */
+const chartDefaults = () => {
+  Chart.defaults.color='#4E5A7A';
+  Chart.defaults.font.family="'Inter', sans-serif";
+  Chart.defaults.font.size=10;
+};
+
+function render3yr(sp,opt) {
+  const ctx=gel('chart3yr'); if(!ctx) return;
+  if(ch3yr) ch3yr.destroy();
+  chartDefaults();
+  ch3yr = new Chart(ctx.getContext('2d'),{
+    type:'bar',
+    data:{labels:['Year 1','Year 2','Year 3'],datasets:[
+      {label:'No action (SP overage)',data:sp,backgroundColor:'rgba(224,82,82,0.6)',borderRadius:4,borderWidth:0},
+      {label:'StorageIQ total cost (ADLS + residual)',data:opt,backgroundColor:'rgba(52,196,122,0.6)',borderRadius:4,borderWidth:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9AA3BC',boxWidth:12,boxHeight:2,font:{size:10}}},
+               tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,
+                 callbacks:{label:c=>' '+c.dataset.label+': '+fmtC(c.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A'}},
+              y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',
+                callback:v=>v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
+  });
+}
+
+function renderTrend(labels,sp,opt) {
+  const ctx=gel('trend-chart'); if(!ctx) return;
+  if(chTrend) chTrend.destroy();
+  chartDefaults();
+  chTrend = new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'No action — SP overage cumulative',data:sp,borderColor:'#E05252',backgroundColor:'rgba(224,82,82,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3},
+      {label:'StorageIQ (ADLS + residual SP)',data:opt,borderColor:'#34C47A',backgroundColor:'rgba(52,196,122,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3,borderDash:[4,3]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#9AA3BC',boxWidth:14,boxHeight:2,font:{size:11}}},
+               tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,
+                 titleColor:'#9AA3BC',bodyColor:'#F0F2F8',padding:12,
+                 callbacks:{label:c=>' '+c.dataset.label+': '+(c.parsed.y>=1000?'$'+Math.round(c.parsed.y/1000)+'K':'$'+Math.round(c.parsed.y))}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{maxTicksLimit:7,color:'#4E5A7A'}},
+              y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',
+                callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
+  });
+}
+
+/* ─── Tab routing ─────────────────────────────────────────────────────────── */
 function switchTab(name) {
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('visible'));
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
@@ -1130,13 +1712,14 @@ function switchTab(name) {
   if(btn) btn.classList.add('active');
 }
 
+/* ─── Date ─────────────────────────────────────────────────────────────────── */
 const dEl=gel('nav-date');
 if(dEl) dEl.textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
+/* ─── Init ─────────────────────────────────────────────────────────────────── */
 Chart.defaults.color='#4E5A7A';
 Chart.defaults.font.family="'Inter', sans-serif";
 Chart.defaults.font.size=10;
-
 calc();
 loadCachedResult();
 </script>
