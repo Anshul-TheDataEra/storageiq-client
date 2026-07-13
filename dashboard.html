@@ -1948,8 +1948,11 @@ let LIVE = null;
    org_quota_gb is derived from subscribedSkus licence counts.
    Per-site rows come from getSharePointSiteUsageDetail. */
 function renderLive(data) {
-  const sm    = data.summary;
-  const SITES = data.sites;
+  // Defensive: never crash if the payload is partial (failed scan, licence
+  // error, or an older cache shape). Missing numbers fall back to 0.
+  data = data || {};
+  const sm    = data.summary || {};
+  const SITES = data.sites || [];
 
   document.getElementById('discovery-results').style.display = 'block';
   document.getElementById('connect-instructions').style.display = 'none';
@@ -1959,7 +1962,7 @@ function renderLive(data) {
   // Fallback to total_used_gb (sum of detail rows) if the storage trend
   // call failed or the org_ fields are absent.
   const totalGB   = (sm.org_used_gb  != null && sm.org_used_gb  > 0)
-                      ? sm.org_used_gb  : sm.total_used_gb;
+                      ? sm.org_used_gb  : (sm.total_used_gb || 0);
   const quotaGB   = sm.org_quota_gb  ?? 0;
   const unusedGB  = sm.org_unused_gb ?? 0;
   const usedPct   = sm.org_used_pct  ?? 0;
