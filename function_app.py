@@ -583,9 +583,18 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                     # and match the substrings below.
                     norm = "".join(ch for ch in part if ch.isalnum())
                     consumed = sku.get("consumedUnits", 0)
-                    sku_debug.append({"sku": raw_part, "consumed": consumed})
+                    # Use purchased seats (prepaidUnits.enabled), not assigned
+                    # seats (consumedUnits). The SharePoint pool bonus is
+                    # granted per seat PURCHASED on the plan, so this tracks
+                    # the SharePoint Admin Centre figure more closely than
+                    # consumedUnits does (which can include trial/unassigned
+                    # licences that inflate the count).
+                    prepaid = sku.get("prepaidUnits", {}) or {}
+                    enabled = prepaid.get("enabled", consumed)
+                    sku_debug.append({"sku": raw_part, "consumed": consumed,
+                                      "enabled": enabled})
                     if any(p in norm for p in POOL_SKU_SUBSTRINGS):
-                        seat_count += consumed
+                        seat_count += enabled
             else:
                 seat_source = "unavailable"
         except Exception:

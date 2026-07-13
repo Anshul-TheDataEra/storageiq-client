@@ -1427,7 +1427,7 @@ function renderLiveDiscovery(data) {
   setT('d-used', fmtExact(total / 1024));
   setT('d-vers', fmtGB(archiv));
   setT('d-pool-sub', (sm.seat_count || 0) > 0
-    ? comma(sm.seat_count) + ' licences detected (' + (sm.seat_source || 'skus') + ')'
+    ? comma(sm.seat_count) + ' licences detected — estimated, may differ slightly from M365 Admin Centre'
     : '1 TB + 10 GB × licences — 0 qualifying licences detected, check Organization.Read.All consent');
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
