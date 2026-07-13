@@ -807,6 +807,10 @@ yr3_cost = yr3_overage × spRate × 12</div>
 
 /* ─── Formatters ─────────────────────────────────────────────────────────── */
 const fmtTB = n => n>=1 ? Math.round(n)+' TB' : Math.round(n*1024)+' GB';
+// Exact TB formatter for LIVE scan data — always 2-decimal precision, never
+// rounds 1.24 TB down to "1 TB" the way fmtTB does for the slider-based demo.
+const fmtExact = n => (Math.round(n * 100) / 100).toFixed(2) + ' TB';
+const fmtExactGB = gb => fmtExact(gb / 1024);
 const fmtGB = n => n>=1024 ? (n/1024).toFixed(1)+' TB' : Math.round(n)+' GB';
 const fmtC  = (n,d=0) => {
   if(n===0) return '$0';
@@ -1419,17 +1423,17 @@ function renderLiveDiscovery(data) {
   const netYr1  = netMo * 12;
   const netYr3  = netMo * 36;
 
-  setT('d-pool', fmtTB(poolTB));
-  setT('d-used', fmtTB(total / 1024));
+  setT('d-pool', fmtExact(poolTB));
+  setT('d-used', fmtExact(total / 1024));
   setT('d-vers', fmtGB(archiv));
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
   if (headroom >= 0) {
-    gE.textContent = fmtGB(headroom) + ' free'; gE.className = 'tile-val c-green';
+    gE.textContent = fmtExactGB(headroom) + ' free'; gE.className = 'tile-val c-green';
     gT.style.setProperty('--tile-accent', 'var(--green)');
     setT('d-gap-sub', 'Within free entitlement');
   } else {
-    gE.textContent = fmtGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
+    gE.textContent = fmtExactGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
     gT.style.setProperty('--tile-accent', 'var(--red)');
     setT('d-gap-sub', 'Overage billing active');
   }
@@ -1453,7 +1457,7 @@ function renderLiveDiscovery(data) {
 
   const vGB = total * 0.58;
   gel('demo-bars').innerHTML =
-    bar('Total consumed', 100, 'var(--navy4)', fmtTB(total / 1024), 'totalGB = org-wide SharePoint usage\nSource: Microsoft Graph getSharePointSiteUsageStorage') +
+    bar('Total consumed', 100, 'var(--navy4)', fmtExact(total / 1024), 'totalGB = org-wide SharePoint usage\nSource: Microsoft Graph getSharePointSiteUsageStorage') +
     bar('Est. version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB)), 'verGB = totalGB × 58% (fast-path estimate;\nrun Deep Scan for exact per-site figures)') +
     bar('Derived recoverable', total > 0 ? Math.round(archiv / total * 100) : 0, 'var(--green)', fmtGB(archiv), 'archGB = totalGB × min(ver/200×0.58,0.80) × (ver−keep)/ver\nkeep=' + keep + ' from your slider') +
     bar('Active content', total > 0 ? Math.round((total - archiv) / total * 100) : 0, 'var(--blue)', fmtGB(total - archiv), 'activeGB = total − archivable');
@@ -1492,7 +1496,7 @@ function renderLiveDiscovery(data) {
 
   const wAvgVer = assumedVer;
   SCAN_DATA = {
-    source: 'Live scan · ' + comma(sites.length) + ' sites · ' + fmtTB(total / 1024) + ' total',
+    source: 'Live scan · ' + comma(sites.length) + ' sites · ' + fmtExact(total / 1024) + ' total',
     total, archiv, poolGB, poolTB, headroom,
     netYr1, netYr3, wAvgVer,
     grossMo, adlsMo, netMo,
@@ -1508,8 +1512,8 @@ function renderLiveDiscovery(data) {
   const scanPanel = gel('exec-scan-results');
   if (scanPanel) {
     scanPanel.style.display = 'block';
-    setT('exec-scan-source', 'Live scan · ' + comma(sites.length) + ' site collections · ' + fmtTB(total / 1024) + ' · pool: ' + fmtTB(poolTB));
-    setT('exec-scan-total', fmtTB(total / 1024));
+    setT('exec-scan-source', 'Live scan · ' + comma(sites.length) + ' site collections · ' + fmtExact(total / 1024) + ' · pool: ' + fmtExact(poolTB));
+    setT('exec-scan-total', fmtExact(total / 1024));
     setT('exec-scan-arch', fmtGB(archiv));
     setT('exec-scan-save1', fmtYr(netYr1));
     setT('exec-scan-avgver', wAvgVer + ' versions (est.)');
