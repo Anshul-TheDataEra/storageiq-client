@@ -99,6 +99,59 @@ def graph_get_all(url: str, token: str):
 
 
 # ===========================================================================
+# $BATCH — send up to 20 GET requests in ONE HTTP call (Graph JSON batching).
+# This is the biggest deep-scan speed-up: ~1/20th the round-trips, and Graph
+# throttles the batch as a unit so 429s are far rarer. Retries the whole batch
+# on 429 honouring Retry-After.
+# ===========================================================================
+GRAPH_BATCH_URL = "https://graph.microsoft.com/v1.0/$batch"
+BATCH_SIZE = 20
+
+
+def graph_batch(rel_urls, token):
+    """rel_urls: list of Graph paths (relative, e.g. '/drives/x/items/y/versions').
+    Returns dict {request_id -> parsed body}. request_id is the index as a str."""
+    headers = {"Authorization": f"Bearer {token}",
+               "Content-Type": "application/json"}
+    out = {}
+    for start in range(0, len(rel_urls), BATCH_SIZE):
+        chunk = rel_urls[start:start + BATCH_SIZE]
+        payload = {"requests": [
+            {"id": str(start + i), "method": "GET", "url": u}
+            for i, u in enumerate(chunk)
+        ]}
+        attempt = 0
+        while True:
+            r = requests.post(GRAPH_BATCH_URL, headers=headers,
+                              json=payload, timeout=90)
+            if r.status_code == 200:
+                for resp in r.json().get("responses", []):
+                    rid = resp.get("id")
+                    status = resp.get("status", 200)
+                    if status == 429:
+                        # Per-item throttle inside the batch — record for a
+                        # single retry pass below.
+                        out.setdefault("_retry", []).append(
+                            rel_urls[int(rid)])
+                    elif status < 300:
+                        out[rid] = resp.get("body", {})
+                break
+            if r.status_code in (429, 503, 504):
+                attempt += 1
+                if attempt > MAX_RETRIES:
+                    break
+                ra = r.headers.get("Retry-After")
+                try:
+                    wait = float(ra) if ra else BACKOFF_BASE * (2 ** (attempt - 1))
+                except ValueError:
+                    wait = BACKOFF_BASE * (2 ** (attempt - 1))
+                time.sleep(min(wait, MAX_BACKOFF) + 0.1 * attempt)
+                continue
+            break  # non-retryable
+    return out
+
+
+# ===========================================================================
 # ACTIVITY: enumerate every site (paginated)
 # ===========================================================================
 @app.activity_trigger(input_name="creds")
@@ -132,6 +185,9 @@ def scan_site(job: dict) -> dict:
     s_used = s_version = s_cold = s_active = 0
     s_files = s_versions = 0
 
+    # ---- Phase 1: collect every file (recursive walk) --------------------
+    # Store (drive_id, item_id) so we can fetch versions in bulk afterwards.
+    files = []   # list of dicts: {drive, id}
     for drive in graph_get_all(f"{GRAPH}/sites/{site_id}/drives", token):
         drive_id = drive.get("id")
         if not drive_id:
@@ -163,17 +219,54 @@ def scan_site(job: dict) -> dict:
                     s_cold += size
                 else:
                     s_active += size
-                vlist = list(graph_get_all(
-                    f"{GRAPH}/drives/{drive_id}/items/{item['id']}/versions",
-                    token))
-                if vlist:
-                    s_versions += len(vlist)
-                    if len(vlist) > 1:
-                        older = sorted(
-                            vlist,
-                            key=lambda v: v.get("lastModifiedDateTime", ""),
-                            reverse=True)[1:]
-                        s_version += sum(v.get("size", 0) or 0 for v in older)
+                files.append({"drive": drive_id, "id": item["id"]})
+
+    # ---- Phase 2: fetch version history in PARALLEL BATCHES ---------------
+    # Instead of one serial call per file, group files into $batch requests
+    # (20 per HTTP call) and run several batches concurrently with threads.
+    # This is the deep-scan speed-up: ~15-20x fewer/faster round-trips.
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _rel_versions(f):
+        return f"/drives/{f['drive']}/items/{f['id']}/versions"
+
+    rel_urls = [_rel_versions(f) for f in files]
+
+    def _run_batch(sub):
+        return graph_batch(sub, token)
+
+    # Split all version URLs into thread-sized chunks; each chunk is itself
+    # batched into 20-per-call inside graph_batch(). 6 concurrent threads
+    # keeps us fast without provoking heavy throttling.
+    CHUNK = BATCH_SIZE * 5            # 100 urls handled per thread task
+    tasks = [rel_urls[i:i + CHUNK] for i in range(0, len(rel_urls), CHUNK)]
+
+    def _tally(bodies):
+        nonlocal s_versions, s_version
+        for rid, body in bodies.items():
+            if rid == "_retry":
+                continue
+            vlist = body.get("value", []) if isinstance(body, dict) else []
+            if not vlist:
+                continue
+            s_versions += len(vlist)
+            if len(vlist) > 1:
+                older = sorted(
+                    vlist,
+                    key=lambda v: v.get("lastModifiedDateTime", ""),
+                    reverse=True)[1:]
+                s_version += sum(v.get("size", 0) or 0 for v in older)
+
+    retry_urls = []
+    if tasks:
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            for bodies in ex.map(_run_batch, tasks):
+                retry_urls.extend(bodies.get("_retry", []))
+                _tally(bodies)
+
+    # One serial retry pass for any items throttled inside a batch.
+    if retry_urls:
+        _tally(graph_batch(retry_urls, token))
 
     gb = lambda b: round(b / (1024 ** 3), 4)
     return {
