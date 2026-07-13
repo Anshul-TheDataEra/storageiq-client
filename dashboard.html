@@ -141,7 +141,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.94);backdrop-fi
 .ctrl-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
 .ctrl-lbl{font-size:12px;color:var(--white2);min-width:230px;flex-shrink:0;line-height:1.4}
 .ctrl-sub{display:block;font-size:10px;color:var(--white3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
-input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--navy4);border-radius:2px;outline:none;cursor:pointer;margin-top:8px}
+/* min-width:0 overrides the flex-item default of min-width:auto, which
+   otherwise keeps a <input type=range> at its ~170-300px intrinsic width no
+   matter how little space the flex container actually has — that's what let
+   the track (and its thumb, at whatever % the value maps to) overflow past
+   the column edge on narrower layouts. */
+input[type=range]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:2px;background:var(--navy4);border-radius:2px;outline:none;cursor:pointer;margin-top:8px}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
 .ctrl-val{font-family:var(--display);font-size:13px;font-weight:600;color:var(--gold);min-width:100px;text-align:right;margin-top:1px}
