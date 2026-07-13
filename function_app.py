@@ -554,15 +554,18 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
         # spaces (e.g. "MICROSOFT_365_ BUSINESS_ PREMIUM_(NO TEAMS)"), so we
         # strip whitespace before matching rather than relying on exact
         # prefixes.
+        # NOTE: these must themselves be alnum-only (no underscores/spaces),
+        # since we compare against `norm`, which has all non-alnum chars
+        # stripped from the real skuPartNumber before matching.
         POOL_SKU_SUBSTRINGS = (
             "ENTERPRISEPACK", "ENTERPRISEPREMIUM", "ENTERPRISEWITHSCAL",
-            "SPE_E",                       # SPE_E3 / SPE_E5
+            "SPEE",                        # SPE_E3 / SPE_E5
             "SPB",                         # Microsoft 365 Business Standard/Premium
             "MICROSOFT365BUSINESSPREMIUM", "MICROSOFT365BUSINESSSTANDARD",
-            "O365_BUSINESS", "O365BUSINESS", "SMB_BUSINESS",
+            "O365BUSINESS", "SMBBUSINESS",
             "STANDARDPACK", "STANDARDWOFFPACK",  # Office 365 E1 / legacy
             "DESKLESSPACK",                # F1/F3 frontline
-            "M365EDU_A", "ENTERPRISEPACK_FACULTY", "ENTERPRISEPACK_STUDENT",
+            "M365EDUA", "ENTERPRISEPACKFACULTY", "ENTERPRISEPACKSTUDENT",
         )
         seat_count = 0
         seat_source = "skus"
@@ -574,7 +577,11 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                 for sku in skus_resp.json().get("value", []):
                     raw_part = sku.get("skuPartNumber") or ""
                     part = raw_part.upper()
-                    norm = "".join(part.split())  # strip all whitespace
+                    # Strip whitespace AND underscores so real-world
+                    # values like "MICROSOFT_365_ BUSINESS_ PREMIUM_(NO
+                    # TEAMS)" normalize to "MICROSOFT365BUSINESSPREMIUM..."
+                    # and match the substrings below.
+                    norm = "".join(ch for ch in part if ch.isalnum())
                     consumed = sku.get("consumedUnits", 0)
                     sku_debug.append({"sku": raw_part, "consumed": consumed})
                     if any(p in norm for p in POOL_SKU_SUBSTRINGS):
