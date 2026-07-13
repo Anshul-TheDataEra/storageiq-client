@@ -15,7 +15,8 @@ nothing — so a copied scanner is useless on its own. That is the moat.
   ◄──────────  savings + ranking + recommendations  ◄──────────
 
 Data boundary: only aggregate numbers + site display names leave the tenant.
-No file contents, no file paths, no user identities.
+No file contents, no file paths, no user identities. 
+testing
 """
 
 import azure.functions as func
@@ -543,16 +544,33 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
 
         # Raw licensed-seat count only — NO quota formula here. The Intelligence
         # API turns seat_count into the storage quota (that formula is the USP).
-        POOL_SKUS = {"ENTERPRISEPACK", "ENTERPRISEPREMIUM", "SPE_E3", "SPE_E5"}
+        #
+        # Microsoft's "1 TB + 10 GB/seat" pool bonus applies to any seat that
+        # includes SharePoint/OneDrive (Office 365 / Microsoft 365 plans), not
+        # just the enterprise E3/E5 SKUs. Match by prefix instead of an exact
+        # small set, so Business Basic/Standard/Premium, F1/F3, A1/A3/A5,
+        # frontline and legacy Office 365 plans all count too.
+        POOL_SKU_PREFIXES = (
+            "ENTERPRISEPACK", "ENTERPRISEPREMIUM", "ENTERPRISEWITHSCAL",
+            "SPE_E", "SPB",            # SPE_E3/E5, Microsoft 365 Business std/prem
+            "O365_BUSINESS", "SMB_BUSINESS",
+            "STANDARDPACK", "STANDARDWOFFPACK",  # Office 365 E1 / legacy
+            "DESKLESSPACK",            # F1/F3 frontline
+            "M365EDU_A", "ENTERPRISEPACK_FACULTY", "ENTERPRISEPACK_STUDENT",
+        )
         seat_count = 0
         seat_source = "skus"
+        sku_debug = []
         try:
             skus_resp = requests.get(f"{GRAPH}/subscribedSkus",
                                      headers=req_headers)
             if skus_resp.status_code == 200:
                 for sku in skus_resp.json().get("value", []):
-                    if sku.get("skuPartNumber") in POOL_SKUS:
-                        seat_count += sku.get("consumedUnits", 0)
+                    part = (sku.get("skuPartNumber") or "").upper()
+                    consumed = sku.get("consumedUnits", 0)
+                    sku_debug.append({"sku": part, "consumed": consumed})
+                    if any(part.startswith(p) for p in POOL_SKU_PREFIXES):
+                        seat_count += consumed
             else:
                 seat_source = "unavailable"
         except Exception:
@@ -564,6 +582,7 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             "org_used_gb": round(org_sp_used_gb, 2),
             "org_used_bytes": org_sp_used_bytes,
             "seat_count": seat_count, "seat_source": seat_source,
+            "sku_debug": sku_debug,
             "total_used_gb": round(total_gb, 2),
             "total_used_bytes": total_bytes,
             "total_files": total_files,

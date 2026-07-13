@@ -654,7 +654,7 @@ yr3_cost = yr3_overage × spRate × 12</div>
   <div id="demo-results" style="display:none">
     <div class="sec-head mb-sm"><span class="sec-tag">Scan output</span><span class="sec-title">Tenant storage overview</span><div class="sec-rule"></div></div>
     <div class="g4 mb">
-      <div class="tile" style="--tile-accent:var(--blue)"><div class="tile-lbl">Free pool</div><div class="tile-val c-blue" id="d-pool">—</div><div class="tile-sub">1 TB + 10 GB × licences</div></div>
+      <div class="tile" style="--tile-accent:var(--blue)"><div class="tile-lbl">Free pool</div><div class="tile-val c-blue" id="d-pool">—</div><div class="tile-sub" id="d-pool-sub">1 TB + 10 GB × licences</div></div>
       <div class="tile" style="--tile-accent:var(--amber)"><div class="tile-lbl">Total consumed</div><div class="tile-val c-amber" id="d-used">—</div><div class="tile-sub">All site collections</div></div>
       <div class="tile" id="d-gap-tile" style="--tile-accent:var(--green)"><div class="tile-lbl">Headroom / Overage</div><div class="tile-val" id="d-gap">—</div><div class="tile-sub" id="d-gap-sub">—</div></div>
       <div class="tile" style="--tile-accent:var(--red)"><div class="tile-lbl">Recoverable (versions)</div><div class="tile-val c-red" id="d-vers">—</div><div class="tile-sub">Archivable now</div></div>
@@ -1426,6 +1426,9 @@ function renderLiveDiscovery(data) {
   setT('d-pool', fmtExact(poolTB));
   setT('d-used', fmtExact(total / 1024));
   setT('d-vers', fmtGB(archiv));
+  setT('d-pool-sub', (sm.seat_count || 0) > 0
+    ? comma(sm.seat_count) + ' licences detected (' + (sm.seat_source || 'skus') + ')'
+    : '1 TB + 10 GB × licences — 0 qualifying licences detected, check Organization.Read.All consent');
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
   if (headroom >= 0) {
