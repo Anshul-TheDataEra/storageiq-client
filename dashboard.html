@@ -189,14 +189,15 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
 .tip-wrap{position:relative;display:inline-flex;align-items:center;gap:4px}
 .tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(212,168,67,0.15);border:1px solid rgba(212,168,67,0.3);color:var(--gold);font-size:8px;font-weight:700;cursor:help;flex-shrink:0;font-family:var(--body);line-height:1;transition:background .15s}
 .tip-icon:hover{background:rgba(212,168,67,0.3)}
-.tip-box{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0F1526;border:1px solid rgba(212,168,67,0.25);border-radius:8px;padding:12px 14px;width:280px;max-width:calc(100vw - 24px);z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+/* position:fixed (not absolute) is deliberate: most tiles/cards on this page
+   have overflow:hidden, which would clip an absolutely-positioned box that
+   escapes its parent's bounds. Fixed positioning + JS-computed coordinates
+   (see the mouseover handler near the bottom of this file) place the tip box
+   relative to the viewport instead, so it is never clipped by an ancestor. */
+.tip-box{display:none;position:fixed;background:#0F1526;border:1px solid rgba(212,168,67,0.25);border-radius:8px;padding:12px 14px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 .tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:rgba(212,168,67,0.25)}
+.tip-box.tip-arrow-flip::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:rgba(212,168,67,0.25)}
 .tip-wrap:hover .tip-box{display:block}
-/* Edge-clamped state, applied by JS when the centred box would overflow the viewport. */
-.tip-box.tip-clamp-left{left:0;transform:translateX(0)}
-.tip-box.tip-clamp-left::after{left:16px;transform:translateX(0)}
-.tip-box.tip-clamp-right{left:auto;right:0;transform:translateX(0)}
-.tip-box.tip-clamp-right::after{left:auto;right:16px;transform:translateX(0)}
 .tip-formula{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);background:rgba(212,168,67,0.08);border-radius:4px;padding:6px 8px;margin:6px 0;line-height:1.6;white-space:pre-wrap}
 .tip-src{font-size:10px;color:var(--white3);margin-top:6px;line-height:1.5}
 .tip-src strong{color:var(--green);font-weight:500}
@@ -1728,33 +1729,53 @@ function switchTab(name) {
 const dEl=gel('nav-date');
 if(dEl) dEl.textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
-/* ─── Tooltip edge-clamping ────────────────────────────────────────────────
-   The .tip-box is centred on its .tip-wrap by default (left:50%). When the
-   icon sits near the left/right edge of a tile row, that centred box runs
-   off-screen or overlaps neighbouring tiles. On hover, measure the box and
-   flip to a left- or right-anchored position if it would overflow.
+/* ─── Tooltip positioning ──────────────────────────────────────────────────
+   Most tile/card containers on this page have overflow:hidden, which clips
+   an absolutely-positioned tip box the moment it extends past the card's
+   edge — that's what caused tooltips to render cut-off or invisible. Fixing
+   this requires position:fixed (see the .tip-box CSS above) with JS-computed
+   viewport coordinates, since fixed elements aren't affected by an
+   ancestor's overflow/clipping.
 
-   Uses event delegation on document (mouseover, which bubbles — mouseenter
-   does not) instead of per-element listeners, so it works regardless of
-   which tab is active when the page loads or how the tab content was
-   inserted, and needs no re-binding when tabs are switched. ────────────── */
+   Event delegation (mouseover on document, which bubbles) is used instead of
+   per-element listeners so this works regardless of which tab is active on
+   load and needs no re-binding when tabs switch. ─────────────────────────── */
 document.addEventListener('mouseover', (e) => {
   const wrap = e.target.closest('.tip-wrap');
   if (!wrap) return;
   const box = wrap.querySelector('.tip-box');
   if (!box) return;
-  box.classList.remove('tip-clamp-left', 'tip-clamp-right');
-  requestAnimationFrame(() => {
-    const r = box.getBoundingClientRect();
-    if (r.width === 0) return; // not actually visible (shouldn't happen, but be safe)
-    const margin = 12;
-    if (r.left < margin) {
-      box.classList.add('tip-clamp-left');
-    } else if (r.right > window.innerWidth - margin) {
-      box.classList.add('tip-clamp-right');
-    }
-  });
+
+  // Show it first (off-canvas is fine momentarily) so we can measure it.
+  box.style.display = 'block';
+  const wrapRect = wrap.getBoundingClientRect();
+  const boxRect = box.getBoundingClientRect();
+  const margin = 12;
+
+  // Default: centred above the icon.
+  let left = wrapRect.left + wrapRect.width / 2 - boxRect.width / 2;
+  let top = wrapRect.top - boxRect.height - 8;
+  box.classList.remove('tip-arrow-flip');
+
+  // Clamp horizontally within the viewport.
+  left = Math.max(margin, Math.min(left, window.innerWidth - boxRect.width - margin));
+
+  // If there isn't room above (e.g. tile near the top of the viewport),
+  // flip the box below the icon instead and flip the arrow to match.
+  if (top < margin) {
+    top = wrapRect.bottom + 8;
+    box.classList.add('tip-arrow-flip');
+  }
+
+  box.style.left = left + 'px';
+  box.style.top = top + 'px';
 });
+
+// Hide fixed-position tip boxes on scroll — their JS-computed coordinates
+// would otherwise go stale as the page moves under them.
+document.addEventListener('scroll', () => {
+  document.querySelectorAll('.tip-box').forEach(b => { b.style.display = 'none'; });
+}, true);
 
 /* ─── Init ─────────────────────────────────────────────────────────────────── */
 Chart.defaults.color='#4E5A7A';
