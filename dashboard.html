@@ -132,13 +132,19 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.94);backdrop-fi
 .pbar{height:8px;border-radius:4px;transition:width .5s}
 .pbar-val{font-family:var(--display);font-size:12px;font-weight:600;min-width:80px;text-align:right}
 
-.ctrl-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+/* align-items:flex-start (not center): .ctrl-lbl holds two lines (title +
+   .ctrl-sub caption), so it's taller than the slider/value. Centering on
+   the row's full height pushed the slider and value down past the title
+   line. Align everything to the top instead, then nudge the slider/value
+   down by half the title's line-height so they sit level with the title
+   text rather than the row top. */
+.ctrl-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
 .ctrl-lbl{font-size:12px;color:var(--white2);min-width:230px;flex-shrink:0;line-height:1.4}
 .ctrl-sub{display:block;font-size:10px;color:var(--white3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
-input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--navy4);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--navy4);border-radius:2px;outline:none;cursor:pointer;margin-top:8px}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
-.ctrl-val{font-family:var(--display);font-size:13px;font-weight:600;color:var(--gold);min-width:100px;text-align:right}
+.ctrl-val{font-family:var(--display);font-size:13px;font-weight:600;color:var(--gold);min-width:100px;text-align:right;margin-top:1px}
 
 .field-g{margin-bottom:12px}
 .field-lbl{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--white3);display:block;margin-bottom:6px}
