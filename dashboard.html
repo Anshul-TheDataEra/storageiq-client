@@ -3,1828 +3,880 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StorageIQ — Enterprise SharePoint Cost Intelligence Platform</title>
+<title>StorageIQ — Executive Discovery Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
-  --bg:#080B14;--bg1:#0D1020;--bg2:#12172B;--bg3:#181E35;--bg4:#1F2640;
-  --border:rgba(255,255,255,0.06);--border-hi:rgba(255,255,255,0.12);
-  --text:#E6E8F0;--text2:#8892B0;--text3:#4A526B;
-  --gold:#C8A84B;--gold-dim:rgba(200,168,75,0.10);--gold-dim2:rgba(200,168,75,0.05);
-  --red:#E05252;--red-dim:rgba(224,82,82,0.09);
-  --green:#3EC47A;--green-dim:rgba(62,196,122,0.09);
-  --blue:#4C7EEB;--blue-dim:rgba(76,126,235,0.09);
-  --teal:#2ABFAA;--teal-dim:rgba(42,191,170,0.09);
-  --amber:#D97A32;--amber-dim:rgba(217,122,50,0.09);
-  --purple:#8B6FD4;--purple-dim:rgba(139,111,212,0.09);
-  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--serif:'DM Serif Display',serif;
-  --r:6px;--rl:10px;
+  --navy:      #0A0E1A;
+  --navy1:     #0F1526;
+  --navy2:     #141B30;
+  --navy3:     #1A2340;
+  --navy4:     #212D50;
+  --gold:      #D4A843;
+  --gold-dim:  rgba(212,168,67,0.10);
+  --gold-line: rgba(212,168,67,0.22);
+  --white:     #F0F2F8;
+  --white2:    #9AA3BC;
+  --white3:    #4E5A7A;
+  --red:       #E05252;
+  --red-dim:   rgba(224,82,82,0.08);
+  --green:     #34C47A;
+  --green-dim: rgba(52,196,122,0.08);
+  --amber:     #E8933A;
+  --amber-dim: rgba(232,147,58,0.08);
+  --blue:      #4C8EEB;
+  --blue-dim:  rgba(76,142,235,0.08);
+  --teal:      #2ABFAA;
+  --display: 'Sora', sans-serif;
+  --body:    'Inter', sans-serif;
+  --r: 8px;
+  --rl: 12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 40% at 15% -5%,rgba(76,126,235,0.05) 0%,transparent 60%),radial-gradient(ellipse 50% 35% at 90% 105%,rgba(200,168,75,0.04) 0%,transparent 55%);pointer-events:none;z-index:0}
+body{background:var(--navy);color:var(--white);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 30% at 5% 0%,rgba(212,168,67,0.04) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 95% 100%,rgba(76,142,235,0.04) 0%,transparent 60%);pointer-events:none;z-index:0}
 
-/* NAV */
-nav{position:sticky;top:0;z-index:100;background:rgba(8,11,20,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 40px}
-.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
-.nav-brand{display:flex;align-items:center;gap:10px}
-.nav-logo{width:28px;height:28px;background:var(--gold);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bg);letter-spacing:-.02em}
-.nav-name{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--text)}
-.nav-name span{color:var(--text3)}
-.nav-tabs{display:flex;gap:2px}
-.nav-tab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:4px;color:var(--text3);cursor:pointer;border:none;background:none;transition:color .15s,background .15s;white-space:nowrap}
-.nav-tab:hover{color:var(--text2);background:var(--bg3)}
-.nav-tab.active{color:var(--gold);background:var(--gold-dim);border:1px solid rgba(200,168,75,0.15)}
-.nav-pill{display:flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(62,196,122,0.2);border-radius:100px;padding:4px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--green)}
-.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.94);backdrop-filter:blur(16px);border-bottom:1px solid rgba(212,168,67,0.12);padding:0 48px}
+.nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-logo{width:32px;height:32px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:11px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
+.nav-name{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--white)}
+.nav-name em{color:var(--gold);font-style:normal}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{font-family:var(--body);font-size:12px;font-weight:500;padding:7px 16px;border-radius:6px;color:var(--white3);cursor:pointer;border:none;background:none;transition:color .15s,background .15s;letter-spacing:.01em}
+.nav-tab:hover{color:var(--white2);background:var(--navy3)}
+.nav-tab.active{color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-line)}
+.nav-meta{display:flex;align-items:center;gap:16px}
+.scan-badge{display:flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(52,196,122,0.2);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--green);letter-spacing:.04em}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.nav-date{font-size:11px;color:var(--white3);letter-spacing:.02em}
 
-/* LAYOUT */
-.page{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 40px 100px}
-section.tab-section{display:none;padding-top:48px}
-section.tab-section.visible{display:block}
+.page{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 48px 100px}
+.tab-section{display:none;padding-top:52px}
+.tab-section.visible{display:block}
 
-/* HERO */
-.hero{padding:64px 0 48px;border-bottom:1px solid var(--border);margin-bottom:48px}
-.hero-label{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.hero-label::before{content:'';width:28px;height:1px;background:var(--gold)}
-.hero h1{font-family:var(--serif);font-size:clamp(28px,4.5vw,50px);font-weight:400;line-height:1.1;letter-spacing:-.01em;margin-bottom:18px}
-.hero h1 em{font-style:italic;color:var(--gold)}
-.hero-desc{font-size:15px;color:var(--text2);max-width:640px;line-height:1.7;margin-bottom:28px}
-.hero-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--bg);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;border-radius:var(--r);border:none;cursor:pointer;transition:opacity .15s}
-.btn-primary:hover{opacity:.88}
-.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:10px 20px;border-radius:var(--r);border:1px solid var(--border-hi);cursor:pointer;transition:color .15s,border-color .15s}
-.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
-.hero-stats{display:flex;gap:32px;padding-top:28px;flex-wrap:wrap}
-.hero-stat-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);letter-spacing:-.02em}
-.hero-stat-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-top:4px}
+.hero{padding:64px 0 52px;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:52px}
+.hero-eye{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.hero-eye::before{content:'';width:32px;height:1px;background:var(--gold)}
+.hero h1{font-family:var(--display);font-size:clamp(30px,4.5vw,50px);font-weight:600;line-height:1.1;letter-spacing:-.02em;margin-bottom:18px;color:var(--white)}
+.hero h1 mark{background:none;color:var(--gold)}
+.hero-desc{font-size:15px;color:var(--white2);max-width:580px;line-height:1.75}
+.hero-kpis{display:flex;gap:40px;margin-top:40px;padding-top:36px;border-top:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
+.kpi-val{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.02em;color:var(--white)}
+.kpi-val.gold{color:var(--gold)}.kpi-val.green{color:var(--green)}.kpi-val.red{color:var(--red)}
+.kpi-lbl{font-size:11px;color:var(--white3);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
 
-/* SECTION MARKER */
-.section-marker{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.section-num{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(200,168,75,0.18);border-radius:4px;padding:3px 8px;flex-shrink:0}
-.section-title{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text3);letter-spacing:.04em;text-transform:uppercase}
-.section-line{flex:1;height:1px;background:var(--border)}
-.mb-s{margin-bottom:48px}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.sec-tag{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-line);border-radius:4px;padding:3px 10px;flex-shrink:0}
+.sec-title{font-size:11px;font-weight:500;color:var(--white3);letter-spacing:.06em;text-transform:uppercase}
+.sec-rule{flex:1;height:1px;background:rgba(255,255,255,0.05)}
+.mb{margin-bottom:48px}.mb-sm{margin-bottom:28px}
 
-/* CARD */
-.card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--rl);padding:24px}
-.card-sm{padding:18px 20px}
+.card{background:var(--navy1);border:1px solid rgba(255,255,255,0.06);border-radius:var(--rl);padding:24px}
+.card-p{padding:28px 32px}
 
-/* GRID */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-@media(max-width:900px){.g6{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:720px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}.g6{grid-template-columns:1fr 1fr}}
-@media(max-width:480px){.g2,.g3,.g4,.g6{grid-template-columns:1fr}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
 
-/* METRIC TILE */
-.tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
-.tile::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--tile-accent,var(--border))}
-.tile-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.tile-val{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1;letter-spacing:-.02em}
-.tile-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:.04em}
-.c-gold{color:var(--gold)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-amber{color:var(--amber)}.c-teal{color:var(--teal)}.c-dim{color:var(--text3)}.c-text{color:var(--text)}.c-purple{color:var(--purple)}
+.tile{background:var(--navy2);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r);padding:20px 22px;position:relative;overflow:hidden}
+.tile::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--tile-accent,rgba(255,255,255,0.06))}
+.tile-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:10px}
+.tile-val{font-family:var(--display);font-size:26px;font-weight:600;line-height:1;letter-spacing:-.02em}
+.tile-sub{font-size:11px;color:var(--white3);margin-top:7px;letter-spacing:.02em}
+.tile-note{font-size:10px;color:var(--white3);margin-top:4px;font-style:italic}
 
-/* HEALTH SCORE TILE */
-.health-tile{background:var(--bg2);border:1px solid rgba(200,168,75,0.2);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;grid-column:span 1}
-.health-tile::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--gold)}
-.health-score-wrap{display:flex;align-items:center;gap:12px;margin-top:4px}
-.health-score-num{font-family:var(--mono);font-size:28px;font-weight:600;letter-spacing:-.03em}
-.health-bar-stack{flex:1}
-.health-bar-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:4px}
-.health-bar-fill{height:6px;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.c-gold{color:var(--gold)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-amber{color:var(--amber)}.c-dim{color:var(--white3)}.c-text{color:var(--white)}
 
-/* EXEC MONEY VIEW */
-.exec-centerpiece{background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border-hi);border-radius:var(--rl);padding:48px;margin-bottom:12px;position:relative;overflow:hidden}
-.exec-centerpiece::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(200,168,75,0.06) 0%,transparent 70%);pointer-events:none}
-.exec-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:32px}
-@media(max-width:800px){.exec-kpi-grid{grid-template-columns:1fr 1fr}}
-.exec-kpi{text-align:center;padding:24px 16px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:var(--r)}
-.exec-kpi-val{font-family:var(--mono);font-size:36px;font-weight:600;letter-spacing:-.03em;line-height:1}
-.exec-kpi-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-top:8px}
-.exec-kpi.hero-kpi{background:var(--gold-dim);border-color:rgba(200,168,75,0.25)}
-.exec-kpi.hero-kpi .exec-kpi-val{font-size:48px;color:var(--gold)}
-.exec-savings-banner{text-align:center;margin-bottom:32px}
-.exec-savings-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.exec-savings-val{font-family:var(--mono);font-size:clamp(48px,8vw,88px);font-weight:600;color:var(--gold);letter-spacing:-.04em;line-height:1}
-.exec-savings-sub{font-size:15px;color:var(--text2);margin-top:10px}
-
-/* BEFORE / AFTER */
-.before-after{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin-bottom:12px}
-.ba-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:32px;position:relative}
-.ba-panel.before{border-color:rgba(224,82,82,0.2)}
-.ba-panel.after{border-color:rgba(62,196,122,0.2)}
-.ba-arrow{display:flex;align-items:center;justify-content:center;padding:0 16px;flex-direction:column;gap:8px}
-.ba-arrow-line{width:2px;flex:1;background:linear-gradient(to bottom,rgba(200,168,75,0.1),rgba(200,168,75,0.4),rgba(200,168,75,0.1))}
-.ba-arrow-icon{font-family:var(--mono);font-size:20px;color:var(--gold)}
-.ba-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:20px}
-.ba-label.before{color:var(--red)}
-.ba-label.after{color:var(--green)}
-.ba-big{font-family:var(--mono);font-size:42px;font-weight:600;letter-spacing:-.03em;line-height:1;margin-bottom:4px}
-.ba-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
-.ba-rows{display:flex;flex-direction:column;gap:10px}
-.ba-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:var(--r);border:1px solid var(--border)}
-.ba-row-label{font-size:12px;color:var(--text2)}
-.ba-row-val{font-family:var(--mono);font-size:13px;font-weight:500}
-@media(max-width:700px){.before-after{grid-template-columns:1fr}.ba-arrow{flex-direction:row;padding:12px 0}.ba-arrow-line{width:40px;height:2px;flex:none}}
-
-/* COMPLIANCE GRID */
-.compliance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
-@media(max-width:700px){.compliance-grid{grid-template-columns:1fr 1fr}}
-.compliance-badge{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;transition:border-color .2s}
-.compliance-badge:hover{border-color:var(--border-hi)}
-.compliance-icon{font-size:20px}
-.compliance-name{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text)}
-.compliance-desc{font-size:11px;color:var(--text3);line-height:1.4}
-.compliance-check{width:18px;height:18px;border-radius:50%;background:var(--green-dim);border:1px solid rgba(62,196,122,0.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--green)}
-
-/* WORKFLOW */
-.workflow{display:flex;flex-direction:column;gap:0;position:relative}
-.wf-step{display:flex;align-items:flex-start;gap:16px;padding:16px 0;position:relative}
-.wf-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:52px;bottom:0;width:2px;background:linear-gradient(to bottom,var(--border-hi),var(--border))}
-.wf-num{width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--gold);flex-shrink:0;position:relative;z-index:1}
-.wf-content{flex:1;padding-top:8px}
-.wf-title{font-weight:600;font-size:13px;margin-bottom:4px}
-.wf-desc{font-size:12px;color:var(--text2);line-height:1.6}
-.wf-tag{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.06em;padding:2px 8px;border-radius:4px;margin-top:6px;text-transform:uppercase}
-
-/* AI RECOMMENDATIONS */
-.ai-rec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:14px;margin-bottom:8px;transition:border-color .2s}
-.ai-rec:hover{border-color:var(--border-hi)}
-.ai-rec-icon{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
-.ai-rec-icon.high{background:var(--red-dim);border:1px solid rgba(224,82,82,0.2)}
-.ai-rec-icon.medium{background:var(--amber-dim);border:1px solid rgba(217,122,50,0.2)}
-.ai-rec-icon.low{background:var(--green-dim);border:1px solid rgba(62,196,122,0.2)}
-.ai-rec-body{flex:1}
-.ai-rec-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
-.ai-rec-desc{font-size:12px;color:var(--text2);line-height:1.6}
-.ai-rec-saving{font-family:var(--mono);font-size:12px;color:var(--green);margin-top:6px;letter-spacing:.02em}
-.ai-rec-meta{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
-
-/* WHY BUY */
-.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media(max-width:700px){.why-grid{grid-template-columns:1fr 1fr}}
-.why-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color .2s}
-.why-card:hover{border-color:var(--border-hi)}
-.why-icon{font-size:20px;margin-bottom:10px}
-.why-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
-.why-desc{font-size:12px;color:var(--text2);line-height:1.55}
-
-/* TABLE */
 .dt{width:100%;border-collapse:collapse}
-.dt th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:8px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+.dt th{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);padding:10px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.07)}
 .dt th:not(:first-child){text-align:right}
-.dt td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
-.dt td:not(:first-child){text-align:right;font-family:var(--mono);font-size:12px}
+.dt td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle}
+.dt td:not(:first-child){text-align:right;font-family:var(--display);font-size:12px}
 .dt tbody tr:last-child td{border-bottom:none}
 .dt tbody tr:hover td{background:rgba(255,255,255,0.015)}
-.row-name{color:var(--text);font-weight:500}
-.row-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
-.tr-total td{background:var(--bg3);border-top:1px solid var(--border-hi) !important;border-bottom:1px solid var(--border-hi) !important}
-.tr-warn td{background:var(--amber-dim)}
-.tr-hi td{background:var(--green-dim)}
+.rn{color:var(--white);font-weight:500}.rs{font-size:11px;color:var(--white3);margin-top:2px}
+.tr-total td{background:var(--navy3)!important;border-top:1px solid rgba(255,255,255,0.1)!important;border-bottom:1px solid rgba(255,255,255,0.1)!important}
+.tr-hi td{background:rgba(52,196,122,0.05)}
+.tr-alert td{background:rgba(224,82,82,0.05)}
+.tr-warn td{background:rgba(232,147,58,0.05)}
 
-/* BADGE */
-.badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:4px;text-transform:uppercase}
-.bg{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,196,122,0.2)}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.bg{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,196,122,0.2)}
 .br{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,82,82,0.2)}
-.bo{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(200,168,75,0.2)}
-.bb{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(76,126,235,0.2)}
-.ba{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,122,50,0.2)}
-.bt{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(42,191,170,0.2)}
-.bp{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(139,111,212,0.2)}
+.bo{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-line)}
+.bb{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(76,142,235,0.2)}
+.ba{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(232,147,58,0.2)}
+.bt{background:rgba(42,191,170,0.08);color:var(--teal);border:1px solid rgba(42,191,170,0.2)}
 
-/* CALLOUT */
-.callout{border-radius:var(--r);padding:16px 20px;display:flex;gap:14px;align-items:flex-start;margin-top:14px}
-.callout.gold{background:var(--gold-dim);border:1px solid rgba(200,168,75,0.14)}
-.callout.green{background:var(--green-dim);border:1px solid rgba(62,196,122,0.14)}
-.callout.red{background:var(--red-dim);border:1px solid rgba(224,82,82,0.14)}
-.callout.amber{background:var(--amber-dim);border:1px solid rgba(217,122,50,0.14)}
-.callout.blue{background:var(--blue-dim);border:1px solid rgba(76,126,235,0.14)}
-.callout-icon{font-size:15px;flex-shrink:0;margin-top:1px;font-family:var(--mono)}
-.callout-text{font-size:13px;line-height:1.65;color:var(--text2)}
-.callout-text strong{color:var(--text);font-weight:500}
+.callout{border-radius:var(--r);padding:16px 20px;display:flex;gap:14px;align-items:flex-start}
+.callout.gold{background:var(--gold-dim);border:1px solid var(--gold-line)}
+.callout.green{background:var(--green-dim);border:1px solid rgba(52,196,122,0.2)}
+.callout.red{background:var(--red-dim);border:1px solid rgba(224,82,82,0.2)}
+.callout.amber{background:var(--amber-dim);border:1px solid rgba(232,147,58,0.2)}
+.callout.blue{background:var(--blue-dim);border:1px solid rgba(76,142,235,0.2)}
+.callout-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.callout-text{font-size:13px;line-height:1.7;color:var(--white2)}
+.callout-text strong{color:var(--white);font-weight:500}
 
-/* SLIDERS */
-.ctrl-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.ctrl-label{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:.04em;min-width:210px;flex-shrink:0}
-.ctrl-label span{display:block;font-size:9px;color:var(--text3);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
-input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);cursor:pointer}
-.ctrl-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--gold);min-width:90px;text-align:right}
+.pbar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.pbar-lbl{font-size:12px;color:var(--white2);min-width:160px;letter-spacing:.01em}
+.pbar-wrap{flex:1;background:var(--navy4);border-radius:4px;height:8px;overflow:hidden}
+.pbar{height:8px;border-radius:4px;transition:width .5s}
+.pbar-val{font-family:var(--display);font-size:12px;font-weight:600;min-width:80px;text-align:right}
 
-/* PROGRESS BAR */
-.pbar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.pbar-label{font-family:var(--mono);font-size:11px;color:var(--text2);min-width:160px;letter-spacing:.03em}
-.pbar-wrap{flex:1;background:var(--bg4);border-radius:3px;height:7px;overflow:hidden}
-.pbar{height:7px;border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)}
-.pbar-val{font-family:var(--mono);font-size:12px;font-weight:500;min-width:90px;text-align:right}
+.ctrl-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.ctrl-lbl{font-size:12px;color:var(--white2);min-width:230px;flex-shrink:0;line-height:1.4}
+.ctrl-sub{display:block;font-size:10px;color:var(--white3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--navy4);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);cursor:pointer}
+.ctrl-val{font-family:var(--display);font-size:13px;font-weight:600;color:var(--gold);min-width:100px;text-align:right}
 
-/* DIVIDER */
-hr.div{border:none;border-top:1px solid var(--border);margin:24px 0}
+.field-g{margin-bottom:12px}
+.field-lbl{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--white3);display:block;margin-bottom:6px}
+.field-inp{width:100%;background:var(--navy3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 14px;color:var(--white);font-family:var(--display);font-size:13px;outline:none;transition:border-color .15s}
+.field-inp:focus{border-color:var(--gold)}
 
-/* VERDICT */
-.verdict{background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border-hi);border-radius:var(--rl);padding:36px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;margin-top:40px}
-@media(max-width:580px){.verdict{grid-template-columns:1fr}}
-.verdict-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.verdict-headline{font-family:var(--serif);font-size:clamp(20px,3vw,30px);font-weight:400;color:var(--text);line-height:1.2;margin-bottom:12px}
-.verdict-body{font-size:13px;color:var(--text2);line-height:1.75}
-.verdict-number{text-align:center;background:var(--gold-dim);border:1px solid rgba(200,168,75,0.18);border-radius:var(--r);padding:24px 32px;min-width:190px}
-.verdict-big{font-family:var(--mono);font-size:38px;font-weight:600;color:var(--gold);letter-spacing:-.03em;line-height:1}
-.verdict-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:.08em;text-transform:uppercase}
-.verdict-payback{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;letter-spacing:.04em}
+.sum-box{background:linear-gradient(135deg,var(--navy2) 0%,var(--navy3) 100%);border:1px solid rgba(212,168,67,0.2);border-radius:var(--rl);padding:40px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;margin-top:44px}
+@media(max-width:640px){.sum-box{grid-template-columns:1fr}}
+.sum-eye{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.sum-hl{font-family:var(--display);font-size:clamp(20px,3vw,30px);font-weight:600;letter-spacing:-.02em;color:var(--white);line-height:1.2;margin-bottom:14px}
+.sum-body{font-size:13px;color:var(--white2);line-height:1.8}
+.sum-num{text-align:center;background:var(--gold-dim);border:1px solid var(--gold-line);border-radius:var(--r);padding:28px 36px;min-width:200px}
+.sum-big{font-family:var(--display);font-size:42px;font-weight:700;color:var(--gold);letter-spacing:-.03em;line-height:1}
+.sum-sub{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-top:8px}
+.sum-note{font-size:11px;color:var(--white3);margin-top:10px}
 
-/* DISCO SPECIFIC */
-.disco-connect-card{background:var(--bg2);border:1px solid var(--border-hi);border-radius:var(--rl);padding:28px;margin-bottom:28px;display:flex;align-items:flex-start;gap:20px}
-.connect-icon{width:44px;height:44px;background:var(--blue-dim);border:1px solid rgba(76,126,235,0.2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
-.connect-info{flex:1}
-.connect-title{font-weight:500;font-size:15px;margin-bottom:4px}
-.connect-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
-.connect-steps{display:flex;gap:8px;flex-wrap:wrap}
-.step-chip{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text3)}
-.step-chip.done{color:var(--green);border-color:rgba(62,196,122,0.2);background:var(--green-dim)}
-.step-chip.active{color:var(--gold);border-color:rgba(200,168,75,0.2);background:var(--gold-dim)}
+.conf-strip{display:flex;gap:0;border:1px solid rgba(255,255,255,0.07);border-radius:var(--r);overflow:hidden;margin-bottom:28px}
+.conf-item{flex:1;padding:14px 18px;border-right:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px}
+.conf-item:last-child{border-right:none}
+.conf-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.conf-txt{font-size:12px;color:var(--white2)}
+.conf-txt strong{color:var(--white);font-weight:500;display:block;font-size:12px}
+.conf-txt span{font-size:10px;color:var(--white3)}
 
-/* CODE */
-.code-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text2);overflow-x:auto;margin-top:12px}
-.code-block .kw{color:var(--blue)}.code-block .str{color:var(--green)}.code-block .cm{color:var(--text3)}.code-block .fn{color:var(--gold)}
+.con-card{background:var(--navy2);border:1px solid rgba(76,142,235,0.2);border-radius:var(--rl);padding:28px 32px;display:flex;align-items:flex-start;gap:20px;margin-bottom:28px}
+.con-icon{width:48px;height:48px;background:var(--blue-dim);border:1px solid rgba(76,142,235,0.2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-size:10px;font-weight:500;letter-spacing:.04em;padding:4px 10px;border-radius:4px;color:var(--white3);background:var(--navy3);border:1px solid rgba(255,255,255,0.07)}
+.chip.done{color:var(--green);border-color:rgba(52,196,122,0.25);background:var(--green-dim)}
+.chip.next{color:var(--gold);border-color:var(--gold-line);background:var(--gold-dim)}
 
-/* INNER TABS */
-.inner-tabs{display:flex;gap:4px;margin-bottom:20px;padding:4px;background:var(--bg2);border-radius:var(--r);width:fit-content;border:1px solid var(--border)}
-.inner-tab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:4px;color:var(--text3);cursor:pointer;border:none;background:none;transition:all .15s}
-.inner-tab.active{background:var(--bg4);color:var(--text);border:1px solid var(--border-hi)}
-.inner-pane{display:none}.inner-pane.visible{display:block}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;padding:10px 20px;border-radius:var(--r);border:none;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn-p{background:var(--gold);color:var(--navy)}
+.btn-g{background:transparent;color:var(--white2);border:1px solid rgba(255,255,255,0.12)}
+.btn-g:hover{border-color:rgba(255,255,255,0.25);color:var(--white)}
+.btn-blk{width:100%;justify-content:center}
 
-/* COST BREAKDOWN CARDS (calculator) */
-.cost-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-@media(max-width:700px){.cost-cat-grid{grid-template-columns:1fr 1fr}}
-.cost-cat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
-.cost-cat-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
-.cost-cat-val{font-family:var(--mono);font-size:18px;font-weight:500;letter-spacing:-.02em;margin-bottom:2px}
-.cost-cat-sub{font-size:11px;color:var(--text3)}
-
-/* STATUS */
-.status-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.status-dot.green{background:var(--green)}.status-dot.amber{background:var(--amber)}.status-dot.red{background:var(--red)}.status-dot.blue{background:var(--blue)}
-
-/* FOOTER */
-footer{border-top:1px solid var(--border);padding:28px 40px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;max-width:1200px;margin:0 auto}
-.footer-brand{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.06em}
-.footer-src{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:right;line-height:1.8;letter-spacing:.03em}
-
-.anno{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.04em;margin-top:8px;line-height:1.6}
 .chart-wrap{position:relative;width:100%}
+.anno{font-size:10px;color:var(--white3);margin-top:10px;line-height:1.7;letter-spacing:.02em}
+.site-bar{height:4px;border-radius:2px;background:var(--blue);display:inline-block;vertical-align:middle;margin-right:8px}
 
-/* VERSION BLOAT */
-.vb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-@media(max-width:700px){.vb-grid{grid-template-columns:1fr 1fr}}
-.vb-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
-.vb-stat-label{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
-.vb-stat-val{font-family:var(--mono);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1}
-.vb-stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
+.ft-brand{font-size:11px;color:var(--white3);letter-spacing:.06em}
+.ft-src{font-size:10px;color:var(--white3);text-align:right;line-height:1.9}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav role="navigation" aria-label="Main navigation">
+<nav>
   <div class="nav-inner">
     <div class="nav-brand">
-      <div class="nav-logo" aria-hidden="true">IQ</div>
-      <div class="nav-name">Storage<span>IQ</span></div>
+      <div class="nav-logo">IQ</div>
+      <div class="nav-name">Storage<em>IQ</em></div>
     </div>
-    <div class="nav-tabs" role="tablist">
-      <button class="nav-tab active" role="tab" aria-selected="true" data-tab="discovery">01 Discovery</button>
-      <button class="nav-tab" role="tab" aria-selected="false" data-tab="executive">02 Executive View</button>
-      <button class="nav-tab" role="tab" aria-selected="false" data-tab="calculator">03 Calculator</button>
-      <button class="nav-tab" role="tab" aria-selected="false" data-tab="beforeafter">04 Before / After</button>
-      <button class="nav-tab" role="tab" aria-selected="false" data-tab="saving">05 ADLS Saving</button>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="executive" onclick="switchTab('executive')">Executive Summary</button>
+      <button class="nav-tab" data-tab="discovery" onclick="switchTab('discovery')">Live Discovery</button>
+      <button class="nav-tab" data-tab="calculator" onclick="switchTab('calculator')">Savings Calculator</button>
     </div>
-    <div class="nav-pill" role="status">
-      <span class="nav-dot" aria-hidden="true"></span>
-      DEMO MODE
+    <div class="nav-meta">
+      <span class="nav-date" id="nav-date"></span>
+      <div class="scan-badge"><span class="pulse"></span><span id="scan-lbl">ILLUSTRATIVE</span></div>
     </div>
   </div>
 </nav>
 
-<div class="page" role="main">
+<div class="page">
 
-<!-- ═══════════════════════════════════════════
-     TAB 1: DISCOVERY
-     ═══════════════════════════════════════════ -->
-<section id="tab-discovery" class="tab-section visible" role="tabpanel">
+<!-- TAB 1: EXECUTIVE SUMMARY -->
+<section id="tab-executive" class="tab-section visible">
 
   <div class="hero">
-    <div class="hero-label">StorageIQ · Enterprise SharePoint Cost Intelligence</div>
-    <h1>Reduce SharePoint storage costs<br>by up to <em>90%</em> without changing<br>user experience.</h1>
-    <p class="hero-desc">Identify millions in avoidable SharePoint storage spend in under 4 hours. Connect your Microsoft 365 tenant and get an instant executive-grade audit — storage composition, version bloat, cost drivers, ROI, and a compliance-safe archival plan.</p>
-    <div class="hero-actions">
-      <button class="btn-primary" onclick="runDemo()">▶ Run Discovery Scan</button>
-      <button class="btn-ghost" onclick="showConnectInstructions()">⊕ Connect Live Tenant</button>
-      <button class="btn-ghost" onclick="switchTab('executive')">$ Executive View →</button>
-    </div>
-    <div class="hero-stats" role="group">
-      <div><div class="hero-stat-val">90%</div><div class="hero-stat-label">Max storage reduction</div></div>
-      <div><div class="hero-stat-val">67×</div><div class="hero-stat-label">ADLS vs SP price ratio</div></div>
-      <div><div class="hero-stat-val">&lt;4h</div><div class="hero-stat-label">Full tenant scan time</div></div>
-      <!--<div><div class="hero-stat-val">14+</div><div class="hero-stat-label">Compliance frameworks</div></div>-->
+    <div class="hero-eye">StorageIQ · Microsoft 365 Storage Intelligence</div>
+    <h1>Your SharePoint is paying<br><mark>67× more</mark> than it needs to.</h1>
+    <p class="hero-desc">StorageIQ performs a non-invasive, read-only audit of your Microsoft 365 tenant, identifies every GB of recoverable version bloat, and delivers a precise cost reduction plan — without touching a single file.</p>
+    <div class="hero-kpis">
+      <div><div class="kpi-val gold" id="ex-3yr">—</div><div class="kpi-lbl">3-year avoidable cost</div></div>
+      <div><div class="kpi-val" id="ex-arch">—</div><div class="kpi-lbl">Recoverable storage</div></div>
+      <div><div class="kpi-val" id="ex-util">—</div><div class="kpi-lbl">Free pool utilised today</div></div>
+      <div><div class="kpi-val red" id="ex-yr3">—</div><div class="kpi-lbl">Year-3 bill if no action</div></div>
     </div>
   </div>
 
-  <!-- Connect Instructions -->
-  <div id="connect-instructions" style="display:none" class="mb-s">
-    <div class="section-marker">
-      <span class="section-num">API</span>
-      <span class="section-title">Connect your Microsoft 365 tenant</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="disco-connect-card">
-      <div class="connect-icon">🔷</div>
-      <div class="connect-info">
-        <div class="connect-title">Azure App Registration — 3 steps, 5 minutes</div>
-        <div class="connect-desc">A read-only service principal in your tenant. Zero write permissions. No data leaves your environment — all calculations run client-side in this browser file.</div>
-        <div class="connect-steps">
-          <span class="step-chip done">✓ portal.azure.com</span>
-          <span class="step-chip active">→ App Registration</span>
-          <span class="step-chip">Sites.Read.All</span>
-          <span class="step-chip">Reports.Read.All</span>
-          <span class="step-chip">Client Secret</span>
-        </div>
-      </div>
-    </div>
-    <div class="g2" style="margin-top:14px">
-      <div class="card card-sm">
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Paste credentials to connect live</div>
-        <div style="margin-bottom:10px">
-          <label style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;display:block;margin-bottom:4px">TENANT ID</label>
-          <input id="inp-tenant" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="width:100%;background:var(--bg3);border:1px solid var(--border-hi);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
-        </div>
-        <div style="margin-bottom:10px">
-          <label style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;display:block;margin-bottom:4px">CLIENT ID</label>
-          <input id="inp-client" type="text" placeholder="App Registration Client ID" style="width:100%;background:var(--bg3);border:1px solid var(--border-hi);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
-        </div>
-        <div style="margin-bottom:14px">
-          <label style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;display:block;margin-bottom:4px">CLIENT SECRET</label>
-          <input id="inp-secret" type="password" placeholder="App secret value" style="width:100%;background:var(--bg3);border:1px solid var(--border-hi);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
-        </div>
-        <button class="btn-primary" style="width:100%" onclick="connectLive()">Connect &amp; Scan Tenant</button>
-        <button class="btn-ghost" style="width:100%;margin-top:8px" onclick="startDeepScan()">⌁ Deep Scan (exact versions — slower)</button>
+  <div class="sec-head mb-sm">
+    <span class="sec-tag">Confidence</span>
+    <span class="sec-title">What these numbers are based on</span>
+    <div class="sec-rule"></div>
+  </div>
 
-        <!-- Deep scan progress (Durable background job) -->
-        <div id="scan-progress" style="display:none;margin-top:14px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <span id="scan-phase" style="font-size:12px;font-weight:600">Starting deep scan…</span>
-            <span id="scan-count" style="font-size:12px;font-family:var(--mono);color:var(--text3)">0 / 0 sites</span>
-          </div>
-          <div style="width:100%;height:10px;background:var(--bg3);border:1px solid var(--border-hi);border-radius:6px;overflow:hidden">
-            <div id="scan-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#1a73c4,#2ec7a6);transition:width .4s ease"></div>
-          </div>
-          <div id="scan-pct" style="margin-top:6px;font-size:11px;font-family:var(--mono);color:var(--text3)">0%</div>
-        </div>
-      </div>
-      <div class="callout gold" style="align-self:start">
-        <span class="callout-icon">◈</span>
-        <div class="callout-text">
-          <strong>For the demo today:</strong> click "Run Discovery Scan" to see real output with representative enterprise data.<br><br>
-          <strong>IT approval tip:</strong> The three permissions above are read-only minimum. Most enterprise approvals complete in 3–5 business days.
-        </div>
-      </div>
+  <div class="conf-strip mb">
+    <div class="conf-item" style="background:rgba(52,196,122,0.03)">
+      <div class="conf-dot" style="background:var(--green)"></div>
+      <div class="conf-txt"><strong>Microsoft licensing model</strong><span>1 TB base + 10 GB per E3/E5 licence. Published Microsoft docs.</span></div>
+    </div>
+    <div class="conf-item" style="background:rgba(52,196,122,0.03)">
+      <div class="conf-dot" style="background:var(--green)"></div>
+      <div class="conf-txt"><strong>SharePoint overage rate</strong><span>Adjustable below. Microsoft Extra File Storage pricing.</span></div>
+    </div>
+    <div class="conf-item" style="background:rgba(232,147,58,0.03)">
+      <div class="conf-dot" style="background:var(--amber)"></div>
+      <div class="conf-txt"><strong>Version bloat estimate</strong><span>Industry benchmark: ~58% of storage. Live scan confirms exact figure.</span></div>
+    </div>
+    <div class="conf-item" style="background:rgba(232,147,58,0.03)">
+      <div class="conf-dot" style="background:var(--amber)"></div>
+      <div class="conf-txt"><strong>Growth projection</strong><span>Based on your input. Live scan validates with 90-day actual trend.</span></div>
     </div>
   </div>
 
-  <!-- Discovery Results -->
-  <div id="discovery-results" style="display:none">
-
-    <!-- 01 Executive Summary Cards -->
-    <div class="section-marker">
-      <span class="section-num">01</span>
-      <span class="section-title">Executive Summary — SharePoint Cost Intelligence</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="g6 mb-s" role="group" aria-label="Executive summary metrics">
-      <div class="tile" style="--tile-accent:var(--blue)">
-        <div class="tile-label">Total SP Storage</div>
-        <div class="tile-val c-blue" id="d-total">—</div>
-        <div class="tile-sub" id="d-total-sub">Across all site collections</div>
-      </div>
-      <div class="tile" style="--tile-accent:var(--green)">
-        <div class="tile-label">Active Storage</div>
-        <div class="tile-val c-green" id="d-active">—</div>
-        <div class="tile-sub">Actively used files</div>
-      </div>
-      <div class="tile" style="--tile-accent:var(--text3)">
-        <div class="tile-label">Cold Storage</div>
-        <div class="tile-val c-dim" id="d-cold">—</div>
-        <div class="tile-sub">Not accessed &gt; 90 days</div>
-      </div>
-      <div class="tile" style="--tile-accent:var(--red)">
-        <div class="tile-label">Version Bloat</div>
-        <div class="tile-val c-red" id="d-vers">—</div>
-        <div class="tile-sub">Archivable version history</div>
-      </div>
-      <div class="tile" style="--tile-accent:var(--gold)">
-        <div class="tile-label">Annual Savings Opp.</div>
-        <div class="tile-val c-gold" id="d-savings-opp">—</div>
-        <div class="tile-sub">If archived to ADLS today</div>
-      </div>
-      <div class="health-tile">
-        <div class="tile-label">SharePoint Health</div>
-        <div class="health-score-wrap">
-          <div class="health-score-num c-gold" id="d-health-score">—</div>
-          <div class="health-bar-stack">
-            <div class="health-bar-track">
-              <div class="health-bar-fill" id="d-health-bar" style="width:0%;background:var(--gold)"></div>
-            </div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.06em" id="d-health-label">Calculating...</div>
-          </div>
-        </div>
-        <div class="tile-sub">Version ratio · Growth · Compliance</div>
-      </div>
-    </div>
-
-    <!-- 02 Storage Composition -->
-    <div class="section-marker">
-      <span class="section-num">02</span>
-      <span class="section-title">Storage Composition — What is your SharePoint actually holding?</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="g2 mb-s">
-      <div class="card">
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Storage breakdown by category</div>
-        <div id="composition-bars"></div>
-        <div class="callout amber" style="margin-top:16px">
-          <span class="callout-icon">◈</span>
-          <div class="callout-text"><strong>Most storage is not actively used.</strong> Historical versions and cold files represent the largest recoverable opportunity — without any impact on active user workflows.</div>
-        </div>
-      </div>
-      <div class="card">
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Version count distribution per site</div>
-        <div class="chart-wrap" style="height:220px">
-          <canvas id="versionChart">Version distribution chart</canvas>
-        </div>
-        <div class="anno" style="margin-top:12px" id="version-anno">—</div>
-      </div>
-    </div>
-
-    <!-- 03 Version Bloat Intelligence -->
-    <div class="section-marker">
-      <span class="section-num">03</span>
-      <span class="section-title">Version Bloat Intelligence — Primary Recovery Driver</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="card mb-s">
-      <div class="vb-grid">
-        <div class="vb-stat">
-          <div class="vb-stat-label">Files Analysed</div>
-          <div class="vb-stat-val c-blue" id="vb-files">—</div>
-          <div class="vb-stat-sub">Across all document libraries</div>
-        </div>
-        <div class="vb-stat">
-          <div class="vb-stat-label">Average Versions / File</div>
-          <div class="vb-stat-val c-amber" id="vb-avg-ver">—</div>
-          <div class="vb-stat-sub">Across sampled sites</div>
-        </div>
-        <div class="vb-stat">
-          <div class="vb-stat-label">Recommended Versions</div>
-          <div class="vb-stat-val c-green" id="vb-rec-ver">5</div>
-          <div class="vb-stat-sub">Best practice retention</div>
-        </div>
-        <div class="vb-stat">
-          <div class="vb-stat-label">Excess Versions</div>
-          <div class="vb-stat-val c-red" id="vb-excess">—</div>
-          <div class="vb-stat-sub">Archivable immediately</div>
-        </div>
-        <div class="vb-stat">
-          <div class="vb-stat-label">Storage in Excess Versions</div>
-          <div class="vb-stat-val c-red" id="vb-storage">—</div>
-          <div class="vb-stat-sub">Recoverable today</div>
-        </div>
-        <div class="vb-stat" style="background:var(--gold-dim);border-color:rgba(200,168,75,0.2)">
-          <div class="vb-stat-label">Recovery Opportunity</div>
-          <div class="vb-stat-val c-gold" id="vb-recovery">—</div>
-          <div class="vb-stat-sub">Monthly ADLS saving</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 04 Top Cost Contributors -->
-    <div class="section-marker">
-      <span class="section-num">04</span>
-      <span class="section-title">Top Cost Contributors — Ranked by Business Impact</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="card mb-s">
-      <table class="dt" id="sites-table">
-        <thead>
-          <tr>
-            <th>Site / Collection</th>
-            <th>Dept</th>
-            <th>Used Storage</th>
-            <th>Est. Monthly Cost</th>
-            <th>Recoverable</th>
-            <th>Annual Saving</th>
-            <th>Risk</th>
-          </tr>
-        </thead>
-        <tbody id="sites-tbody"></tbody>
-      </table>
-    </div>
-
-    <!-- 05 AI Recommendations -->
-    <div class="section-marker">
-      <span class="section-num">05</span>
-      <span class="section-title">AI Recommendations — Prioritised Action Plan</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div id="ai-recommendations" class="mb-s"></div>
-
-    <!-- 06 Licence Entitlement -->
-    <div class="section-marker">
-      <span class="section-num">06</span>
-      <span class="section-title">Licence Entitlement Reality Check</span>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="card mb-s">
-      <table class="dt">
-        <thead><tr><th>Component</th><th>Storage</th><th>Your Cost</th><th>Basis</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><div class="row-name">Base tenant pool</div><div class="row-sub">Every M365 tenant</div></td>
-            <td>1 TB</td><td class="c-green">$0</td><td class="c-dim">Always included</td>
-            <td><span class="badge bg">Free always</span></td>
-          </tr>
-          <tr>
-            <td><div class="row-name">E3/E5 pool bonus</div><div class="row-sub" id="lic-sub">—</div></td>
-            <td id="lic-pool-vol">—</td><td class="c-green">$0 (in licence)</td><td class="c-dim">Microsoft docs</td>
-            <td><span class="badge bg">Already paid</span></td>
-          </tr>
-          <tr class="tr-total">
-            <td><div class="row-name">Your total free pool</div><div class="row-sub">1 TB base + bonus</div></td>
-            <td class="c-gold" id="lic-total">—</td><td class="c-green">$0 / month</td><td class="c-dim">Pooled, not per-site</td>
-            <td><span class="badge bo">Your ceiling</span></td>
-          </tr>
-          <tr class="tr-warn">
-            <td><div class="row-name">Beyond free pool</div><div class="row-sub">Microsoft Extra File Storage</div></td>
-            <td>Every GB over</td><td class="c-red">$0.20/GB/mo</td><td class="c-dim">M365 Admin Centre</td>
-            <td><span class="badge br">Overage rate</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-  </div><!-- /discovery-results -->
-</section>
-
-<!-- ═══════════════════════════════════════════
-     TAB 2: EXECUTIVE VIEW
-     ═══════════════════════════════════════════ -->
-<section id="tab-executive" class="tab-section" role="tabpanel">
-
-  <div class="hero" style="padding:48px 0 40px">
-    <div class="hero-label">Executive Money View · CFO / CIO Dashboard</div>
-    <h1>The complete <em>financial case</em><br>for SharePoint optimization.</h1>
-    <p class="hero-desc">Every number below is derived from your discovery data. Savings, ROI, payback, and projections are mathematically consistent — ready for board and budget conversations.</p>
+  <div class="sec-head mb-sm">
+    <span class="sec-tag">Your environment</span>
+    <span class="sec-title">Adjust to match your tenant — all figures update live</span>
+    <div class="sec-rule"></div>
   </div>
 
-  <!-- CENTERPIECE: Annual Savings -->
-  <div class="exec-centerpiece mb-s">
-    <div class="exec-savings-banner">
-      <div class="exec-savings-label">Annual Savings Opportunity</div>
-      <div class="exec-savings-val" id="exec-annual-savings">—</div>
-      <div class="exec-savings-sub">Reduce SharePoint storage cost by archiving version history and cold files to Azure Data Lake Storage Gen2</div>
-    </div>
-    <div class="exec-kpi-grid">
-      <div class="exec-kpi">
-        <div class="exec-kpi-val c-red" id="exec-current-cost">—</div>
-        <div class="exec-kpi-label">Current Annual SP Cost</div>
-      </div>
-      <div class="exec-kpi hero-kpi">
-        <div class="exec-kpi-val" id="exec-optimized-cost">—</div>
-        <div class="exec-kpi-label">Optimized Annual Cost</div>
-      </div>
-      <div class="exec-kpi">
-        <div class="exec-kpi-val c-blue" id="exec-3yr-savings">—</div>
-        <div class="exec-kpi-label">3-Year Total Savings</div>
-      </div>
-      <div class="exec-kpi">
-        <div class="exec-kpi-val c-green" id="exec-roi">—</div>
-        <div class="exec-kpi-label">ROI</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ROI detail row -->
-  <div class="g4 mb-s">
-    <div class="tile" style="--tile-accent:var(--green)">
-      <div class="tile-label">Monthly Saving</div>
-      <div class="tile-val c-green" id="exec-monthly-saving">—</div>
-      <div class="tile-sub">Immediate post-archival</div>
-    </div>
-    <div class="tile" style="--tile-accent:var(--gold)">
-      <div class="tile-label">Payback Period</div>
-      <div class="tile-val c-gold" id="exec-payback">—</div>
-      <div class="tile-sub">On ~$65K build investment</div>
-    </div>
-    <div class="tile" style="--tile-accent:var(--blue)">
-      <div class="tile-label">Storage Reduction</div>
-      <div class="tile-val c-blue" id="exec-storage-reduction">—</div>
-      <div class="tile-sub">SharePoint footprint</div>
-    </div>
-    <div class="tile" style="--tile-accent:var(--teal)">
-      <div class="tile-label">Price Ratio</div>
-      <div class="tile-val c-teal">67×</div>
-      <div class="tile-sub">ADLS vs SP overage rate</div>
-    </div>
-  </div>
-
-  <!-- Cost trajectory chart -->
-  <div class="section-marker">
-    <span class="section-num">01</span>
-    <span class="section-title">36-Month Cost Trajectory — No Action vs Optimized</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="card mb-s">
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Cumulative cost over 36 months — includes ~$65K one-time build cost</div>
-    <div class="chart-wrap" style="height:280px">
-      <canvas id="execCostChart">Cost trajectory chart</canvas>
-    </div>
-    <div id="exec-payback-anno" class="anno" style="margin-top:12px">—</div>
-  </div>
-
-  <!-- Cost component breakdown -->
-  <div class="section-marker">
-    <span class="section-num">02</span>
-    <span class="section-title">Projected Annual Cost — Transparent Breakdown</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="g2 mb-s">
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Current annual cost drivers</div>
-      <table class="dt" id="exec-cost-before">
-        <thead><tr><th>Category</th><th>Volume</th><th>Rate</th><th>Annual Cost</th></tr></thead>
-        <tbody id="exec-cost-before-body"></tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Optimized annual cost — post archival</div>
-      <table class="dt" id="exec-cost-after">
-        <thead><tr><th>Category</th><th>Volume</th><th>Rate</th><th>Annual Cost</th></tr></thead>
-        <tbody id="exec-cost-after-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Why Customers Buy -->
-  <div class="section-marker">
-    <span class="section-num">03</span>
-    <span class="section-title">Why Enterprise Customers Buy StorageIQ</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="why-grid mb-s">
-    <div class="why-card">
-      <div class="why-icon">💰</div>
-      <div class="why-title">Reduce SharePoint Spend</div>
-      <div class="why-desc">Eliminate overage billing and reduce the Microsoft storage footprint by up to 90% without changing user-facing workflows.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">⚡</div>
-      <div class="why-title">Improve SharePoint Performance</div>
-      <div class="why-desc">Smaller tenants load faster. Reducing version bloat improves search indexing, sync speed, and overall M365 responsiveness.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">📈</div>
-      <div class="why-title">Control Storage Growth</div>
-      <div class="why-desc">Automatic lifecycle policies prevent version accumulation from recurring. Growth rate drops from 18%/yr to under 5%/yr.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">🏢</div>
-      <div class="why-title">M&A Readiness</div>
-      <div class="why-desc">Clean up before mergers or migrations. Reducing tenant size from 430 TB to 82 TB dramatically cuts migration complexity and cost.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">🔒</div>
-      <div class="why-title">Governance & Compliance</div>
-      <div class="why-desc">Archive to ADLS with full metadata retention. Legal hold, GDPR, FINRA, and SEC compliance maintained throughout.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">🧾</div>
-      <div class="why-title">Reduce Overage Bills</div>
-      <div class="why-desc">Microsoft Extra File Storage at $0.20/GB/mo becomes $0.003/GB/mo in ADLS cool tier — a 67× cost difference on published rates.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">🔍</div>
-      <div class="why-title">Full Searchability Retained</div>
-      <div class="why-desc">Metadata stays in SharePoint. Users search and retrieve archived versions seamlessly — no workflow disruption.</div>
-    </div>
-    <div class="why-card">
-      <div class="why-icon">🤖</div>
-      <div class="why-title">AI Copilot Readiness</div>
-      <div class="why-desc">Microsoft 365 Copilot performs better on lean, well-governed tenants. Eliminating version noise improves AI retrieval accuracy.</div>
-    </div>
-  </div>
-
-</section>
-
-<!-- ═══════════════════════════════════════════
-     TAB 3: CALCULATOR
-     ═══════════════════════════════════════════ -->
-<section id="tab-calculator" class="tab-section" role="tabpanel">
-
-  <div class="section-marker">
-    <span class="section-num">01</span>
-    <span class="section-title">Your Environment — Adjust to Match Actual Tenant</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="card mb-s">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px">
+  <div class="card card-p mb">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
       <div>
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Current state</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Tenant facts</div>
         <div class="ctrl-row">
-          <div class="ctrl-label">Total licences (E3 + E5)<span>Drives free pool size</span></div>
-          <input type="range" id="sl-lic" min="5000" max="150000" step="1000" value="43000">
-          <div class="ctrl-val" id="ov-lic">43,000</div>
+          <div class="ctrl-lbl">Total licences (E3 + E5)<span class="ctrl-sub">Determines your free storage pool</span></div>
+          <input type="range" id="sl-lic" min="1000" max="100000" step="1000" value="15000">
+          <div class="ctrl-val" id="ov-lic">15,000</div>
         </div>
         <div class="ctrl-row">
-          <div class="ctrl-label">Current SP storage used<span>Total across all sites (TB)</span></div>
-          <input type="range" id="sl-used" min="10" max="800" step="5" value="215">
-          <div class="ctrl-val" id="ov-used">215 TB</div>
+          <div class="ctrl-lbl">Current SharePoint storage used<span class="ctrl-sub">Total across all site collections (TB)</span></div>
+          <input type="range" id="sl-used" min="10" max="500" step="5" value="150">
+          <div class="ctrl-val" id="ov-used">150 TB</div>
         </div>
         <div class="ctrl-row">
-          <div class="ctrl-label">Acquisition / migration adds<span>New content from merger (TB)</span></div>
-          <input type="range" id="sl-acq" min="0" max="400" step="5" value="120">
-          <div class="ctrl-val" id="ov-acq">120 TB</div>
+          <div class="ctrl-lbl">Additional storage needed<span class="ctrl-sub">From business plan or migration (TB)</span></div>
+          <input type="range" id="sl-need" min="0" max="300" step="5" value="50">
+          <div class="ctrl-val" id="ov-need">50 TB</div>
         </div>
         <div class="ctrl-row">
-          <div class="ctrl-label">Annual organic growth rate<span>New files + new versions per year</span></div>
-          <input type="range" id="sl-growth" min="5" max="40" step="1" value="18">
-          <div class="ctrl-val" id="ov-growth">18%/yr</div>
+          <div class="ctrl-lbl">Annual content growth rate<span class="ctrl-sub">New files and versions, year-on-year</span></div>
+          <input type="range" id="sl-growth" min="5" max="40" step="1" value="10">
+          <div class="ctrl-val" id="ov-growth">10%</div>
         </div>
       </div>
       <div>
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Archival policy inputs</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Policy and pricing</div>
         <div class="ctrl-row">
-          <div class="ctrl-label">Avg versions per file<span>From your version sample</span></div>
-          <input type="range" id="sl-ver" min="10" max="500" step="10" value="200">
-          <div class="ctrl-val" id="ov-ver">200</div>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-label">Keep in SharePoint<span>Current + N prior versions live</span></div>
+          <div class="ctrl-lbl">Versions to keep per file<span class="ctrl-sub">Current version + N prior remain in SharePoint</span></div>
           <input type="range" id="sl-keep" min="1" max="20" step="1" value="3">
-          <div class="ctrl-val" id="ov-keep">3 versions</div>
+          <div class="ctrl-val" id="ov-keep">3</div>
         </div>
         <div class="ctrl-row">
-          <div class="ctrl-label">% files version-heavy<span>Files with &gt;10 versions</span></div>
-          <input type="range" id="sl-pct" min="10" max="90" step="5" value="65">
-          <div class="ctrl-val" id="ov-pct">65%</div>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-label">Version storage % of total<span>From discovery scan sample</span></div>
+          <div class="ctrl-lbl">Version overhead estimate<span class="ctrl-sub">% of your storage that is version copies</span></div>
           <input type="range" id="sl-vspct" min="20" max="80" step="5" value="58">
           <div class="ctrl-val" id="ov-vspct">58%</div>
         </div>
+        <div class="ctrl-row">
+          <div class="ctrl-lbl">SharePoint overage rate ($/GB/mo)<span class="ctrl-sub">Adjust if you have a Microsoft EA discount</span></div>
+          <input type="range" id="sl-sprate" min="0.05" max="0.25" step="0.01" value="0.20">
+          <div class="ctrl-val" id="ov-sprate">$0.20</div>
+        </div>
+        <div class="callout amber" style="margin-top:20px">
+          <span class="callout-icon">💡</span>
+          <div class="callout-text"><strong>Microsoft discount?</strong> Many enterprise customers with EA agreements pay $0.12–$0.18/GB/mo. Adjust the rate above. The saving case is compelling at any rate above $0.05.</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="section-marker">
-    <span class="section-num">02</span>
-    <span class="section-title">Current Storage Position</span>
-    <div class="section-line"></div>
+  <div class="sec-head mb-sm">
+    <span class="sec-tag">Position</span>
+    <span class="sec-title">Storage position — today vs 3 years from now</span>
+    <div class="sec-rule"></div>
   </div>
 
-  <div class="g4 mb-s">
+  <div class="g4 mb">
     <div class="tile" style="--tile-accent:var(--blue)">
-      <div class="tile-label">Free Pool (E3/E5)</div>
-      <div class="tile-val c-blue" id="m-pool">—</div>
-      <div class="tile-sub">1TB + 10GB × licences</div>
+      <div class="tile-lbl">Free pool (E3/E5)</div>
+      <div class="tile-val c-blue" id="t-pool">—</div>
+      <div class="tile-sub">1 TB + 10 GB per licence</div>
+      <div class="tile-note">Already paid for</div>
     </div>
     <div class="tile" style="--tile-accent:var(--gold)">
-      <div class="tile-label">Total Demand Today</div>
-      <div class="tile-val c-gold" id="m-demand">—</div>
-      <div class="tile-sub">Used + acquisition</div>
+      <div class="tile-lbl">Storage in use today</div>
+      <div class="tile-val c-gold" id="t-used">—</div>
+      <div class="tile-sub" id="t-used-sub">—</div>
     </div>
-    <div class="tile" id="m-gap-tile" style="--tile-accent:var(--green)">
-      <div class="tile-label">Pool Headroom / Overage</div>
-      <div class="tile-val" id="m-gap">—</div>
-      <div class="tile-sub" id="m-gap-sub">—</div>
+    <div class="tile" id="t-gap-tile" style="--tile-accent:var(--green)">
+      <div class="tile-lbl">Headroom / Overage</div>
+      <div class="tile-val" id="t-gap">—</div>
+      <div class="tile-sub" id="t-gap-sub">—</div>
     </div>
-    <div class="tile" style="--tile-accent:var(--amber)">
-      <div class="tile-label">Demand in 3 Years</div>
-      <div class="tile-val c-amber" id="m-yr3">—</div>
-      <div class="tile-sub">At current growth rate</div>
-    </div>
-  </div>
-
-  <div id="headroom-callout" class="mb-s"></div>
-
-  <div class="section-marker">
-    <span class="section-num">03</span>
-    <span class="section-title">Detailed Cost Breakdown — SharePoint vs ADLS Archival</span>
-    <div class="section-line"></div>
-  </div>
-
-  <!-- Enhanced 6-category cost breakdown -->
-  <div class="card mb-s">
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Current annual cost — all components (SharePoint overage scenario)</div>
-    <div class="cost-cat-grid" id="cost-cat-current"></div>
-    <hr class="div">
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Post-archival annual cost — ADLS Gen2 optimized</div>
-    <div class="cost-cat-grid" id="cost-cat-after"></div>
-    <hr class="div">
-    <div id="calc-saving-banner" style="text-align:center;padding:16px;background:var(--gold-dim);border:1px solid rgba(200,168,75,0.15);border-radius:var(--r)"></div>
-  </div>
-
-  <div class="section-marker">
-    <span class="section-num">04</span>
-    <span class="section-title">SharePoint Extra Storage vs ADLS — Scenario Comparison</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="card" style="margin-bottom:8px">
-    <table class="dt" id="cost-table">
-      <thead>
-        <tr>
-          <th>Scenario</th>
-          <th>Volume</th>
-          <th>Buy Extra SharePoint</th>
-          <th>Archive to ADLS</th>
-          <th>Monthly Saving</th>
-          <th>Annual Saving</th>
-        </tr>
-      </thead>
-      <tbody id="cost-tbody"></tbody>
-    </table>
-  </div>
-  <div class="anno mb-s">
-    SP overage rate: $0.20/GB/mo (Microsoft Extra File Storage add-on · M365 Admin Centre) ·
-    ADLS Gen2 cool tier LRS: $0.003/GB/mo (Azure Pricing Calculator · East US · May 2026) ·
-    Transactions est.: $0.0004/10k ops · Metadata: $0.00 (included) · Monitoring: ~$12/mo flat ·
-    Replication (LRS → GRS uplift): +25% storage cost · Price ratio: 67× cheaper in ADLS
-  </div>
-
-</section>
-
-<!-- ═══════════════════════════════════════════
-     TAB 4: BEFORE / AFTER + COMPLIANCE
-     ═══════════════════════════════════════════ -->
-<section id="tab-beforeafter" class="tab-section" role="tabpanel">
-
-  <div class="hero" style="padding:48px 0 40px">
-    <div class="hero-label">Before vs After · Compliance & User Experience</div>
-    <h1>A <em>dramatic reduction</em> in cost.<br>Zero change to user experience.</h1>
-    <p class="hero-desc">See exactly what changes — and what doesn't. Archive optimization moves cost out of SharePoint into ADLS while keeping every file searchable, retrievable, and compliance-safe.</p>
-  </div>
-
-  <!-- Before / After -->
-  <div class="section-marker">
-    <span class="section-num">01</span>
-    <span class="section-title">Storage & Cost — Before vs After Optimization</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="before-after mb-s">
-    <div class="ba-panel before">
-      <div class="ba-label before">◼ Before Optimization</div>
-      <div class="ba-big c-red" id="ba-before-storage">—</div>
-      <div class="ba-sub">Total SharePoint storage</div>
-      <div class="ba-rows">
-        <div class="ba-row">
-          <span class="ba-row-label">Monthly SharePoint cost</span>
-          <span class="ba-row-val c-red" id="ba-before-monthly">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">Annual SharePoint cost</span>
-          <span class="ba-row-val c-red" id="ba-before-annual">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">Version bloat storage</span>
-          <span class="ba-row-val c-amber" id="ba-before-bloat">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">Cold / inactive files</span>
-          <span class="ba-row-val c-dim" id="ba-before-cold">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">3-year projected cost</span>
-          <span class="ba-row-val c-red" id="ba-before-3yr">—</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="ba-arrow">
-      <div class="ba-arrow-line"></div>
-      <div class="ba-arrow-icon">→</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg)">Optimization</div>
-      <div class="ba-arrow-icon">→</div>
-      <div class="ba-arrow-line"></div>
-    </div>
-
-    <div class="ba-panel after">
-      <div class="ba-label after">◼ After Optimization</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px">
-        <div style="display:flex;align-items:baseline;gap:10px">
-          <div class="ba-big c-green" id="ba-after-sp">—</div>
-          <span style="font-family:var(--mono);font-size:13px;color:var(--text3)">SharePoint</span>
-        </div>
-        <div style="display:flex;align-items:baseline;gap:10px">
-          <div style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--blue)" id="ba-after-adls">—</div>
-          <span style="font-family:var(--mono);font-size:13px;color:var(--text3)">ADLS Gen2</span>
-        </div>
-      </div>
-      <div class="ba-sub">Storage redistributed</div>
-      <div class="ba-rows">
-        <div class="ba-row">
-          <span class="ba-row-label">Monthly total cost</span>
-          <span class="ba-row-val c-green" id="ba-after-monthly">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">Annual total cost</span>
-          <span class="ba-row-val c-green" id="ba-after-annual">—</span>
-        </div>
-        <div class="ba-row" style="background:var(--gold-dim);border-color:rgba(200,168,75,0.2)">
-          <span class="ba-row-label" style="color:var(--gold)">Monthly savings</span>
-          <span class="ba-row-val c-gold" id="ba-savings-monthly">—</span>
-        </div>
-        <div class="ba-row" style="background:var(--gold-dim);border-color:rgba(200,168,75,0.2)">
-          <span class="ba-row-label" style="color:var(--gold)">Annual savings</span>
-          <span class="ba-row-val c-gold" id="ba-savings-annual">—</span>
-        </div>
-        <div class="ba-row">
-          <span class="ba-row-label">3-year projected cost</span>
-          <span class="ba-row-val c-green" id="ba-after-3yr">—</span>
-        </div>
-      </div>
+    <div class="tile" style="--tile-accent:var(--red)">
+      <div class="tile-lbl">Demand in 3 years</div>
+      <div class="tile-val c-amber" id="t-yr3">—</div>
+      <div class="tile-sub" id="t-yr3-sub">—</div>
     </div>
   </div>
 
-  <!-- User Experience Flow -->
-  <div class="section-marker">
-    <span class="section-num">02</span>
-    <span class="section-title">User Experience Flow — How Archival Works Transparently</span>
-    <div class="section-line"></div>
+  <div class="sec-head mb-sm">
+    <span class="sec-tag">Scan value</span>
+    <span class="sec-title">What a live scan delivers vs today's estimates</span>
+    <div class="sec-rule"></div>
   </div>
 
-  <div class="g2 mb-s">
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px">Version archival workflow — zero user disruption</div>
-      <div class="workflow">
-        <div class="wf-step">
-          <div class="wf-num">1</div>
-          <div class="wf-content">
-            <div class="wf-title">File exists in SharePoint</div>
-            <div class="wf-desc">User works normally. All versions visible in version history panel. No change to interface, permissions, or search.</div>
-            <span class="wf-tag" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(76,126,235,0.2)">SharePoint Online</span>
-          </div>
-        </div>
-        <div class="wf-step">
-          <div class="wf-num">2</div>
-          <div class="wf-content">
-            <div class="wf-title">Versions 1–5 remain in SharePoint</div>
-            <div class="wf-desc">The current version and the 4 most recent prior versions stay live in SharePoint. Instant access, full fidelity.</div>
-            <span class="wf-tag" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(62,196,122,0.2)">Live in SharePoint</span>
-          </div>
-        </div>
-        <div class="wf-step">
-          <div class="wf-num">3</div>
-          <div class="wf-content">
-            <div class="wf-title">Versions 6+ archived to ADLS Gen2</div>
-            <div class="wf-desc">Older versions moved to Azure Data Lake Storage cool tier at $0.003/GB/mo. StorageIQ maintains a metadata pointer in SharePoint for each archived version.</div>
-            <span class="wf-tag" style="background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,122,50,0.2)">ADLS Cool Tier · 67× cheaper</span>
-          </div>
-        </div>
-        <div class="wf-step">
-          <div class="wf-num">4</div>
-          <div class="wf-content">
-            <div class="wf-title">Metadata remains fully searchable</div>
-            <div class="wf-desc">File name, author, modification date, content type, and custom metadata stay indexed in SharePoint Search and Microsoft 365 Compliance Centre.</div>
-            <span class="wf-tag" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(76,126,235,0.2)">M365 Search · Purview · eDiscovery</span>
-          </div>
-        </div>
-        <div class="wf-step">
-          <div class="wf-num">5</div>
-          <div class="wf-content">
-            <div class="wf-title">User requests a historical version</div>
-            <div class="wf-desc">User clicks version in the SharePoint version history panel — exactly as they do today. StorageIQ intercepts the request transparently.</div>
-            <span class="wf-tag" style="background:var(--teal-dim);color:var(--teal);border:1px solid rgba(42,191,170,0.2)">No user training required</span>
-          </div>
-        </div>
-        <div class="wf-step">
-          <div class="wf-num">6</div>
-          <div class="wf-content">
-            <div class="wf-title">Version automatically restored in &lt;1ms</div>
-            <div class="wf-desc">ADLS cool tier delivers &lt;1ms retrieval latency. File is temporarily hydrated back into SharePoint for the user session, then re-archived. Compliance chain of custody maintained throughout.</div>
-            <span class="wf-tag" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(62,196,122,0.2)">&lt;1ms retrieval · Full compliance</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px">What changes vs what stays the same</div>
-      <div style="margin-bottom:20px">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.08em;margin-bottom:10px">✓ UNCHANGED — USER EXPERIENCE</div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">SharePoint interface — identical</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">File search and discovery</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">Version history panel</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">Permissions and access controls</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">M365 Compliance and Purview</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">eDiscovery and Legal Hold</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">Microsoft Copilot integration</span></div>
-        <div class="status-row"><div class="status-dot green"></div><span style="font-size:13px;color:var(--text2)">OneDrive sync clients</span></div>
-      </div>
-      <div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px">◈ OPTIMIZED — BEHIND THE SCENES</div>
-        <div class="status-row"><div class="status-dot amber"></div><span style="font-size:13px;color:var(--text2)">Version storage location (SP → ADLS)</span></div>
-        <div class="status-row"><div class="status-dot amber"></div><span style="font-size:13px;color:var(--text2)">SharePoint storage consumption</span></div>
-        <div class="status-row"><div class="status-dot amber"></div><span style="font-size:13px;color:var(--text2)">Microsoft monthly overage billing</span></div>
-        <div class="status-row"><div class="status-dot amber"></div><span style="font-size:13px;color:var(--text2)">Tenant storage growth trajectory</span></div>
-        <div class="status-row"><div class="status-dot amber"></div><span style="font-size:13px;color:var(--text2)">Version retention policy enforcement</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Compliance -->
-  <!--<div class="section-marker">
-    <span class="section-num">03</span>
-    <span class="section-title">Compliance Coverage — Archive Without Compromise</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="callout green" style="margin-bottom:20px;margin-top:0">
-    <span class="callout-icon">✓</span>
-    <div class="callout-text"><strong>Archive optimization does not compromise compliance.</strong> StorageIQ maintains full metadata, audit trails, legal hold markers, and retention policy enforcement across both SharePoint and ADLS. All archived content remains discoverable, producible, and admissible.</div>
-  </div>
-
-  <div class="compliance-grid mb-s">
-    <div class="compliance-badge">
-      <div class="compliance-icon">🔐</div>
-      <div class="compliance-name">ISO 27001</div>
-      <div class="compliance-desc">Information security management. ADLS encryption at rest and in transit.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">🛡</div>
-      <div class="compliance-name">SOC 2 Type II</div>
-      <div class="compliance-desc">Azure ADLS Gen2 is SOC 2 certified. Access logs and audit trails preserved.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">🇪🇺</div>
-      <div class="compliance-name">GDPR</div>
-      <div class="compliance-desc">Data residency controls. Right to erasure honoured. Metadata purge supported.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">🏥</div>
-      <div class="compliance-name">HIPAA</div>
-      <div class="compliance-desc">Azure HIPAA BAA coverage. PHI encrypted, access-logged, and auditable.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">📊</div>
-      <div class="compliance-name">FINRA</div>
-      <div class="compliance-desc">Books and records retention up to 7 years. WORM storage support via ADLS immutability.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">⚖️</div>
-      <div class="compliance-name">SEC 17a-4</div>
-      <div class="compliance-desc">Non-erasable, non-rewritable storage. Compliant with SEC electronic records rules.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">📁</div>
-      <div class="compliance-name">Retention Policies</div>
-      <div class="compliance-desc">M365 retention labels respected and enforced across SP and ADLS archive simultaneously.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-    <div class="compliance-badge">
-      <div class="compliance-icon">🔒</div>
-      <div class="compliance-name">Legal Hold</div>
-      <div class="compliance-desc">Legal hold markers honoured. Archived content frozen and protected from deletion.</div>
-      <div class="compliance-check">✓</div>
-    </div>
-  </div>
--->
-</section>
-
-
-<!-- ═══════════════════════════════════════════
-     TAB 5: ADLS SAVING
-     ═══════════════════════════════════════════ -->
-<section id="tab-saving" class="tab-section" role="tabpanel">
-
-  <div class="section-marker">
-    <span class="section-num">01</span>
-    <span class="section-title">What Moves to ADLS and What It Costs</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="g2" style="margin-bottom:12px">
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Archival volume breakdown</div>
-      <div id="arch-bars"></div>
-    </div>
-    <div class="card">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Cost after archival</div>
-      <div id="cost-after"></div>
-    </div>
-  </div>
-
-  <div class="card mb-s">
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Monthly cost — SharePoint storage vs ADLS cool tier</div>
-    <div id="bar-compare"></div>
-  </div>
-
-  <div class="section-marker">
-    <span class="section-num">02</span>
-    <span class="section-title">36-Month Cumulative Cost — No Action vs ADLS Archival</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="card mb-s">
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Cumulative cost over 36 months — includes ~$65K one-time build cost</div>
-    <div class="chart-wrap" style="height:260px">
-      <canvas id="costChart">Cost comparison chart</canvas>
-    </div>
-    <div id="payback-anno" class="anno" style="margin-top:12px">—</div>
-  </div>
-
-  <div class="section-marker">
-    <span class="section-num">03</span>
-    <span class="section-title">ADLS Tier Selection — Cool vs Cold vs Archive</span>
-    <div class="section-line"></div>
-  </div>
-
-  <div class="card mb-s">
+  <div class="card mb">
     <table class="dt">
-      <thead><tr><th>Tier</th><th>$/GB/mo</th><th>Retrieval Latency</th><th>Best For</th><th>vs SP Overage</th></tr></thead>
+      <thead>
+        <tr><th>Insight</th><th style="text-align:left">Illustrative (now)</th><th style="text-align:left">After live scan</th><th>Confidence</th></tr>
+      </thead>
       <tbody>
-        <tr><td><div class="row-name">Hot</div><div class="row-sub">Frequently accessed</div></td><td class="c-amber">$0.018</td><td class="c-dim">Instant</td><td class="c-dim" style="text-align:right">Active working files</td><td class="c-green">11× cheaper</td></tr>
-        <tr class="tr-hi"><td><div class="row-name">Cool ← recommended</div><div class="row-sub">Infrequent access, &gt;30 days</div></td><td class="c-green">$0.003</td><td class="c-dim">&lt;1ms</td><td class="c-dim" style="text-align:right">Version history &gt;30 days</td><td class="c-green">67× cheaper</td></tr>
-        <tr><td><div class="row-name">Cold</div><div class="row-sub">Rare access, &gt;90 days</div></td><td class="c-teal">$0.0025</td><td class="c-dim">&lt;1ms</td><td class="c-dim" style="text-align:right">Compliance archives</td><td class="c-green">80× cheaper</td></tr>
-        <tr><td><div class="row-name">Archive</div><div class="row-sub">Offline, &gt;180 days</div></td><td class="c-blue">$0.001</td><td class="c-dim">1–15 hours</td><td class="c-dim" style="text-align:right">Legal hold, 7yr+ retention</td><td class="c-green">200× cheaper</td></tr>
+        <tr>
+          <td><div class="rn">Total storage consumed</div><div class="rs">Across all site collections</div></td>
+          <td style="text-align:left"><span class="c-gold" id="sc-used">—</span> <span class="c-dim" style="font-size:11px">(manual input)</span></td>
+          <td style="text-align:left"><span class="c-green">Exact to GB, per site</span></td>
+          <td><span class="badge bg">High</span></td>
+        </tr>
+        <tr>
+          <td><div class="rn">Version copy overhead</div><div class="rs">Files with more versions than policy</div></td>
+          <td style="text-align:left"><span class="c-amber" id="sc-ver">—</span> <span class="c-dim" style="font-size:11px">(benchmark 58%)</span></td>
+          <td style="text-align:left"><span class="c-green">Exact per site and library</span></td>
+          <td><span class="badge ba">Est → High</span></td>
+        </tr>
+        <tr>
+          <td><div class="rn">Recoverable storage</div><div class="rs">Versions beyond keep policy</div></td>
+          <td style="text-align:left"><span class="c-amber" id="sc-arch">—</span> <span class="c-dim" style="font-size:11px">(derived)</span></td>
+          <td style="text-align:left"><span class="c-green">Exact, file-by-file</span></td>
+          <td><span class="badge ba">Est → High</span></td>
+        </tr>
+        <tr class="tr-hi">
+          <td><div class="rn">Year-1 cost saving</div><div class="rs">Overage cost eliminated</div></td>
+          <td style="text-align:left"><span class="c-amber" id="sc-save1">—</span> <span class="c-dim" style="font-size:11px">(illustrative)</span></td>
+          <td style="text-align:left"><span class="c-green">Firm figure, validated by M365 Admin</span></td>
+          <td><span class="badge bg">High after scan</span></td>
+        </tr>
+        <tr>
+          <td><div class="rn">Top sites by version bloat</div><div class="rs">Prioritised remediation list</div></td>
+          <td style="text-align:left"><span class="c-dim">Not available</span></td>
+          <td style="text-align:left"><span class="c-green">Ranked, with site owner and dept</span></td>
+          <td><span class="badge bg">Delivered at scan</span></td>
+        </tr>
+        <tr>
+          <td><div class="rn">Actual growth rate</div><div class="rs">90-day usage trend from Reports API</div></td>
+          <td style="text-align:left"><span class="c-amber" id="sc-growth">—</span> <span class="c-dim" style="font-size:11px">(assumed)</span></td>
+          <td style="text-align:left"><span class="c-green">Validated from 90-day actuals</span></td>
+          <td><span class="badge bg">High after scan</span></td>
+        </tr>
       </tbody>
     </table>
-    <div class="anno">Prices: Azure Pricing Calculator · LRS · East US · May 2026. For ZRS add ~25%. Transactions: ~$0.0004/10K write ops, ~$0.00004/10K read ops (negligible at version-retrieval scale).</div>
+    <div class="callout blue" style="margin-top:16px">
+      <span class="callout-icon">🔷</span>
+      <div class="callout-text"><strong>Scan takes under 4 hours.</strong> Read-only access only — 3 Microsoft Graph API permissions, zero write access, no data leaves your environment. Every amber estimate above becomes a confirmed green figure.</div>
+    </div>
   </div>
 
-  <div class="verdict" role="region">
-    <div>
-      <div class="verdict-label">Bottom Line</div>
-      <div class="verdict-headline">Archive cold versions.<br><em>Keep SharePoint clean.</em></div>
-      <div class="verdict-body" id="verdict-body">—</div>
+  <div class="sec-head mb-sm">
+    <span class="sec-tag">Business case</span>
+    <span class="sec-title">Financial impact — 3-year view</span>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="g2 mb-sm">
+    <div class="card">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Storage composition today</div>
+      <div id="comp-bars"></div>
     </div>
-    <div class="verdict-number">
-      <div class="verdict-big" id="verdict-num">—</div>
-      <div class="verdict-sub">3-year saving</div>
-      <div class="verdict-payback" id="verdict-payback">—</div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Annual cost — no action vs optimised</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart3yr"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb-sm">
+    <table class="dt">
+      <thead><tr><th>Scenario</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>3-year total</th></tr></thead>
+      <tbody id="fin-tbody"></tbody>
+    </table>
+    <div class="anno" id="fin-anno">—</div>
+  </div>
+
+  <div class="sum-box">
+    <div>
+      <div class="sum-eye">Bottom line</div>
+      <div class="sum-hl" id="sum-hl">—</div>
+      <div class="sum-body" id="sum-body">—</div>
+    </div>
+    <div class="sum-num">
+      <div class="sum-big" id="sum-big">—</div>
+      <div class="sum-sub">3-year avoidable cost</div>
+      <div class="sum-note" id="sum-note">—</div>
     </div>
   </div>
 
 </section>
 
-</div><!-- /page -->
+<!-- TAB 2: LIVE DISCOVERY -->
+<section id="tab-discovery" class="tab-section">
 
-<footer role="contentinfo">
-  <div class="footer-brand">STORAGEIQ · ENTERPRISE SHAREPOINT COST INTELLIGENCE · v3.0 · JUNE 2026</div>
-  <div class="footer-src">
-    SP extra storage: $0.20/GB/mo · M365 Admin Centre · microsoft.com<br>
-    ADLS Gen2 cool (LRS): $0.003/GB/mo · azure.microsoft.com/pricing/calculator<br>
-    E3/E5 pool: 1TB base + 10GB × licences · Microsoft licensing documentation
+  <div class="hero" style="padding-top:40px;padding-bottom:36px;margin-bottom:36px">
+    <div class="hero-eye">Live Scan · Microsoft Graph API</div>
+    <h1>Connect your tenant.<br>Get <mark>exact</mark> numbers in under 4 hours.</h1>
+    <p class="hero-desc">Illustrative estimates on the Executive Summary become confirmed figures the moment the scan completes. Run the demo to preview the output, or connect your tenant below.</p>
+    <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="runDemo()">&#9654; Run Demo Scan</button>
+      <button class="btn btn-g" onclick="document.getElementById('live-connect').scrollIntoView({behavior:'smooth'})">&#8853; Connect Live Tenant</button>
+    </div>
+  </div>
+
+  <div id="demo-results" style="display:none">
+    <div class="sec-head mb-sm"><span class="sec-tag">Scan output</span><span class="sec-title">Tenant storage overview</span><div class="sec-rule"></div></div>
+    <div class="g4 mb">
+      <div class="tile" style="--tile-accent:var(--blue)"><div class="tile-lbl">Free pool</div><div class="tile-val c-blue" id="d-pool">—</div><div class="tile-sub">1 TB + 10 GB × licences</div></div>
+      <div class="tile" style="--tile-accent:var(--amber)"><div class="tile-lbl">Total consumed</div><div class="tile-val c-amber" id="d-used">—</div><div class="tile-sub">All site collections</div></div>
+      <div class="tile" id="d-gap-tile" style="--tile-accent:var(--green)"><div class="tile-lbl">Headroom / Overage</div><div class="tile-val" id="d-gap">—</div><div class="tile-sub" id="d-gap-sub">—</div></div>
+      <div class="tile" style="--tile-accent:var(--red)"><div class="tile-lbl">Recoverable (versions)</div><div class="tile-val c-red" id="d-vers">—</div><div class="tile-sub">Archivable now</div></div>
+    </div>
+    <div class="sec-head mb-sm"><span class="sec-tag">Sites</span><span class="sec-title">Top sites by storage and version bloat</span><div class="sec-rule"></div></div>
+    <div class="card mb">
+      <table class="dt">
+        <thead><tr><th>Site collection</th><th>Department</th><th>Used storage</th><th>% of total</th><th>Avg versions</th><th>Recoverable</th><th>Priority</th></tr></thead>
+        <tbody id="demo-tbody"></tbody>
+      </table>
+    </div>
+    <div class="g2 mb">
+      <div class="card">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Storage breakdown</div>
+        <div id="demo-bars"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Avg versions per site</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="ver-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="live-connect">
+    <div class="sec-head mb-sm"><span class="sec-tag">API</span><span class="sec-title">Connect your Microsoft 365 tenant</span><div class="sec-rule"></div></div>
+    <div class="con-card">
+      <div class="con-icon">🔷</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Azure App Registration — 3 steps, ~5 minutes</div>
+        <div style="font-size:13px;color:var(--white2);line-height:1.65">Read-only service principal. Zero write permissions. All calculations run client-side — no data leaves your environment or reaches any external server.</div>
+        <div class="chips">
+          <span class="chip done">&#10003; portal.azure.com</span>
+          <span class="chip next">&#8594; App Registration</span>
+          <span class="chip">Sites.Read.All</span>
+          <span class="chip">Reports.Read.All</span>
+          <span class="chip">User.Read.All</span>
+          <span class="chip">Client Secret</span>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-sm">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:16px">Required Graph API permissions</div>
+      <table class="dt">
+        <thead><tr><th>Permission</th><th>Type</th><th>Purpose</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td><div class="rn">Sites.Read.All</div></td><td class="c-dim">Application</td><td style="text-align:right;color:var(--white3)">Enumerate sites and storage usage</td><td><span class="badge bg">Read only</span></td></tr>
+          <tr><td><div class="rn">Reports.Read.All</div></td><td class="c-dim">Application</td><td style="text-align:right;color:var(--white3)">Tenant-level storage reports</td><td><span class="badge bg">Read only</span></td></tr>
+          <tr><td><div class="rn">User.Read.All</div></td><td class="c-dim">Application</td><td style="text-align:right;color:var(--white3)">Count licences for pool calculation</td><td><span class="badge bg">Read only</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="field-g"><label class="field-lbl">Tenant ID</label><input class="field-inp" id="inp-tenant" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+        <div class="field-g"><label class="field-lbl">Client ID</label><input class="field-inp" id="inp-client" type="text" placeholder="App Registration Client ID"></div>
+        <div class="field-g"><label class="field-lbl">Client Secret</label><input class="field-inp" id="inp-secret" type="password" placeholder="App secret value"></div>
+        <button class="btn btn-p btn-blk" onclick="connectLive()">Connect &amp; Scan Tenant</button>
+        <button class="btn btn-g btn-blk" style="margin-top:8px" onclick="startDeepScan()">Deep Scan — exact versions (slower)</button>
+
+        <div id="deep-scan-progress" style="display:none;margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <span id="deep-scan-phase" style="font-size:12px;font-weight:600">Starting deep scan…</span>
+            <span id="deep-scan-count" style="font-size:12px;color:var(--white3)">0 / 0 sites</span>
+          </div>
+          <div style="width:100%;height:10px;background:var(--navy4,#1a2138);border:1px solid rgba(255,255,255,0.1);border-radius:6px;overflow:hidden">
+            <div id="deep-scan-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3B82F6,#34C47A);transition:width .4s ease"></div>
+          </div>
+          <div id="deep-scan-pct" style="margin-top:6px;font-size:11px;color:var(--white3)">0%</div>
+        </div>
+      </div>
+      <div class="callout gold" style="align-self:start">
+        <span class="callout-icon">&#9672;</span>
+        <div class="callout-text"><strong>For this session:</strong> click "Run Demo Scan" to preview exact output format with representative enterprise data. The live connection works identically.<br><br><strong>IT approval:</strong> These 3 read-only permissions are the minimum. Most enterprise tenants approve in 3–5 business days.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- TAB 3: SAVINGS CALCULATOR -->
+<section id="tab-calculator" class="tab-section">
+
+  <div class="hero" style="padding-top:40px;padding-bottom:36px;margin-bottom:36px">
+    <div class="hero-eye">Savings Calculator</div>
+    <h1>Model your exact<br>reduction scenario.</h1>
+    <p class="hero-desc">All inputs are editable. Changes here sync back to the Executive Summary. After a live scan, replace estimates with confirmed figures for a board-ready business case.</p>
+  </div>
+
+  <div class="sec-head mb-sm"><span class="sec-tag">Inputs</span><span class="sec-title">Scenario parameters</span><div class="sec-rule"></div></div>
+
+  <div class="card card-p mb">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Current state</div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Total licences (E3 + E5)<span class="ctrl-sub">Determines free storage pool</span></div><input type="range" id="sl-lic-2" min="1000" max="100000" step="1000" value="15000"><div class="ctrl-val" id="ov2-lic">15,000</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Current storage used<span class="ctrl-sub">Total across all sites (TB)</span></div><input type="range" id="sl-used-2" min="10" max="500" step="5" value="150"><div class="ctrl-val" id="ov2-used">150 TB</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Additional storage needed<span class="ctrl-sub">From business plan (TB)</span></div><input type="range" id="sl-need-2" min="0" max="300" step="5" value="50"><div class="ctrl-val" id="ov2-need">50 TB</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Annual growth rate<span class="ctrl-sub">Year-on-year content growth</span></div><input type="range" id="sl-growth-2" min="5" max="40" step="1" value="10"><div class="ctrl-val" id="ov2-growth">10%</div></div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:20px">Policy and pricing</div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Versions to keep per file<span class="ctrl-sub">Current + N prior remain in SharePoint</span></div><input type="range" id="sl-keep-2" min="1" max="20" step="1" value="3"><div class="ctrl-val" id="ov2-keep">3</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">Version overhead %<span class="ctrl-sub">% of storage that is version copies</span></div><input type="range" id="sl-vspct-2" min="20" max="80" step="5" value="58"><div class="ctrl-val" id="ov2-vspct">58%</div></div>
+        <div class="ctrl-row"><div class="ctrl-lbl">SharePoint overage rate ($/GB/mo)<span class="ctrl-sub">Adjust for your Microsoft discount</span></div><input type="range" id="sl-sprate-2" min="0.05" max="0.25" step="0.01" value="0.20"><div class="ctrl-val" id="ov2-sprate">$0.20</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-head mb-sm"><span class="sec-tag">Output</span><span class="sec-title">Savings breakdown</span><div class="sec-rule"></div></div>
+
+  <div class="g4 mb-sm">
+    <div class="tile" style="--tile-accent:var(--blue)"><div class="tile-lbl">Free pool</div><div class="tile-val c-blue" id="c-pool">—</div><div class="tile-sub">1 TB + 10 GB × licences</div></div>
+    <div class="tile" id="c-gap-tile" style="--tile-accent:var(--green)"><div class="tile-lbl">Headroom / Overage</div><div class="tile-val" id="c-gap">—</div><div class="tile-sub" id="c-gap-sub">—</div></div>
+    <div class="tile" style="--tile-accent:var(--gold)"><div class="tile-lbl">Recoverable now</div><div class="tile-val c-gold" id="c-arch">—</div><div class="tile-sub">Version bloat beyond policy</div></div>
+    <div class="tile" style="--tile-accent:var(--green)"><div class="tile-lbl">Annual saving</div><div class="tile-val c-green" id="c-save-yr">—</div><div class="tile-sub">Overage cost avoided</div></div>
+  </div>
+
+  <div class="card mb-sm">
+    <table class="dt">
+      <thead><tr><th>Scenario</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>3-year total</th><th>Net saving</th></tr></thead>
+      <tbody id="calc-tbody"></tbody>
+    </table>
+    <div class="anno" id="calc-anno">—</div>
+  </div>
+
+  <div class="sec-head mb-sm"><span class="sec-tag">Projection</span><span class="sec-title">36-month cumulative cost trajectory</span><div class="sec-rule"></div></div>
+
+  <div class="card mb">
+    <div class="chart-wrap" style="height:280px"><canvas id="trend-chart"></canvas></div>
+    <div class="anno" id="trend-anno">—</div>
+  </div>
+
+</section>
+
+</div>
+
+<footer>
+  <div class="ft-brand">STORAGEIQ · MICROSOFT 365 INTELLIGENCE · v3.0 · JULY 2026</div>
+  <div class="ft-src">
+    SP Extra File Storage: configurable (default $0.20/GB/mo) · M365 Admin Centre<br>
+    ADLS Gen2 cool tier LRS: $0.003/GB/mo · Azure Pricing Calculator · East US · 2026<br>
+    E3/E5 pool: 1 TB base + 10 GB × assigned licences · Microsoft licensing documentation
   </div>
 </footer>
 
 <script>
 'use strict';
-
-/* ── Formatters ─────────────────────────────────────────────── */
-// Auto-scale storage so small (real) values aren't rounded to "0".
-// Input is GB. Picks TB / GB / MB / KB and keeps meaningful precision.
-function fmtStorageGB(n){
-  if(n == null || isNaN(n)) return '—';
-  if(n >= 1024)   return (n/1024).toFixed(n/1024>=10?0:1) + ' TB';
-  if(n >= 1)      return (n>=10 ? Math.round(n) : n.toFixed(1)) + ' GB';
-  const mb = n*1024;
-  if(mb >= 1)     return (mb>=10 ? Math.round(mb) : mb.toFixed(1)) + ' MB';
-  const kb = mb*1024;
-  if(kb >= 0.1)   return (kb>=10 ? Math.round(kb) : kb.toFixed(1)) + ' KB';
-  return '0 KB';
-}
-const fmtTB  = n => fmtStorageGB(n*1024);   // callers pass TB; convert to GB
-const fmtGB  = n => fmtStorageGB(n);         // callers pass GB
-const fmtC   = (n,d=0) => {
+const fmtTB = n => n>=1 ? Math.round(n)+' TB' : Math.round(n*1024)+' GB';
+const fmtGB = n => n>=1024 ? (n/1024).toFixed(1)+' TB' : Math.round(n)+' GB';
+const fmtC = (n,d=0) => {
+  if(n===0) return '$0';
   if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
-  if(Math.abs(n)>=1e3) return '$'+Math.round(n/1000).toLocaleString()+'K';
-  if(n!==0 && Math.abs(n)<1) return '$'+n.toFixed(2);  // show small dollars
+  if(Math.abs(n)>=1000) return '$'+Math.round(n/1000).toLocaleString()+'K';
   return '$'+n.toFixed(d);
 };
-const fmtMo  = n => fmtC(n)+'/mo';
-const fmtYr  = n => fmtC(n)+'/yr';
-const comma  = n => Math.round(n).toLocaleString();
-const pct    = (a,b) => b>0 ? Math.round(a/b*100)+'%' : '—';
+const fmtYr = n => fmtC(n)+'/yr';
+const comma = n => Math.round(n).toLocaleString();
+const ADLS = 0.003;
 
-/* ── Constants ──────────────────────────────────────────────── */
-const SP_RATE   = 0.20;
-const ADLS_COOL = 0.003;
-const ADLS_COLD = 0.0025;
-const ADLS_ARCH = 0.001;
-const POC_COST  = 65000;
-const TRANS_MO  = 12;      // est. transactions ~$12/mo
-const MONITOR   = 8;       // monitoring ~$8/mo
-const FILES_PER_GB = 68;   // avg files per GB in enterprise SP
+// Sync paired sliders
+const SLIDERS = [
+  ['sl-lic','sl-lic-2','ov-lic','ov2-lic', v=>comma(v)],
+  ['sl-used','sl-used-2','ov-used','ov2-used', v=>v+' TB'],
+  ['sl-need','sl-need-2','ov-need','ov2-need', v=>v+' TB'],
+  ['sl-growth','sl-growth-2','ov-growth','ov2-growth', v=>v+'%'],
+  ['sl-keep','sl-keep-2','ov-keep','ov2-keep', v=>v],
+  ['sl-vspct','sl-vspct-2','ov-vspct','ov2-vspct', v=>v+'%'],
+  ['sl-sprate','sl-sprate-2','ov-sprate','ov2-sprate', v=>'$'+parseFloat(v).toFixed(2)],
+];
 
-/* ── State ──────────────────────────────────────────────────── */
-const S = {};
+function gel(id){return document.getElementById(id)}
+function setT(id,v){const e=gel(id);if(e)e.textContent=v}
+function getV(id){const e=gel(id);return e?+e.value:0}
 
-function readInputs() {
-  S.lic    = +document.getElementById('sl-lic').value;
-  S.used   = +document.getElementById('sl-used').value;
-  S.acq    = +document.getElementById('sl-acq').value;
-  S.growth = +document.getElementById('sl-growth').value;
-  S.ver    = +document.getElementById('sl-ver').value;
-  S.keep   = +document.getElementById('sl-keep').value;
-  S.pct    = +document.getElementById('sl-pct').value/100;
-  S.vspct  = +document.getElementById('sl-vspct').value/100;
-
-  setText('ov-lic',    comma(S.lic));
-  setText('ov-used',   S.used+' TB');
-  setText('ov-acq',    S.acq+' TB');
-  setText('ov-growth', S.growth+'%/yr');
-  setText('ov-ver',    S.ver);
-  setText('ov-keep',   S.keep+' version'+(S.keep>1?'s':''));
-  setText('ov-pct',    Math.round(S.pct*100)+'%');
-  setText('ov-vspct',  Math.round(S.vspct*100)+'%');
+function syncSliders(fromTab) {
+  SLIDERS.forEach(([a,b,la,lb,fmt]) => {
+    const src=fromTab===1?a:b, dst=fromTab===1?b:a;
+    const v=getV(src);
+    const de=gel(dst); if(de) de.value=v;
+    setT(la,fmt(v)); setT(lb,fmt(v));
+  });
 }
 
-/* ── Derived values (single source of truth) ────────────────── */
-function derive() {
-  const poolGB   = 1024 + S.lic*10;
-  const totalGB  = (S.used + S.acq)*1024;
-  const totalTB  = totalGB/1024;
-  const g        = S.growth/100;
-  const totalGB3 = totalGB*Math.pow(1+g,3);
+SLIDERS.forEach(([a,b,la,lb,fmt]) => {
+  const ea=gel(a),eb=gel(b);
+  if(ea) ea.addEventListener('input',()=>{syncSliders(1);calc();});
+  if(eb) eb.addEventListener('input',()=>{syncSliders(2);calc();});
+});
 
-  // Storage composition
-  const activeGB     = totalGB * 0.19;
-  const versionGB    = totalGB * S.vspct;
-  const dupGB        = totalGB * 0.095;
-  const coldGB       = totalGB * (1 - 0.19 - S.vspct - 0.095 - 0.051);
-  const compGB       = totalGB * 0.051;
-
-  // Archivable
-  const verTargetGB  = versionGB * S.pct;
-  const archRatio    = Math.max(0,(S.ver - S.keep)/S.ver);
-  const archGB       = Math.round(verTargetGB * archRatio);
-  const archTB       = archGB/1024;
-  const remainGB     = totalGB - archGB;
-
-  // Overage
-  const overNowGB    = Math.max(0, totalGB - poolGB);
-  const overAfterGB  = Math.max(0, remainGB - poolGB);
-  const over3GB      = Math.max(0, totalGB3 - poolGB);
-
-  // Costs
-  const spCostNow    = overNowGB * SP_RATE;
-  const spCostAfter  = overAfterGB * SP_RATE;
-  const adlsMo       = archGB * ADLS_COOL + TRANS_MO + MONITOR;
-  const spEquivMo    = archGB * SP_RATE;
-  const savingMo     = spEquivMo - (archGB * ADLS_COOL);
-  const savingYr     = savingMo*12;
-  const saving3yr    = savingMo*36;
-  const paybackMo    = savingMo>0 ? Math.ceil(POC_COST/savingMo) : 999;
-  const roi          = POC_COST>0 ? Math.round((saving3yr - POC_COST)/POC_COST*100) : 0;
-
-  // Health score: 100 - penalties
-  const verPenalty   = Math.min(40, Math.round((S.ver - S.keep)/S.ver * 40));
-  const overPenalty  = overNowGB>0 ? Math.min(30, Math.round(overNowGB/totalGB*100)) : 0;
-  const coldPenalty  = Math.min(20, Math.round((coldGB+versionGB)/totalGB * 20));
-  const growthPenalty= Math.min(10, Math.round((S.growth-5)/35*10));
-  const healthScore  = Math.max(20, 100 - verPenalty - overPenalty - coldPenalty - growthPenalty);
-
-  // Files
-  const totalFiles   = Math.round(totalGB * FILES_PER_GB);
-  const excessVer    = Math.round(totalFiles * S.pct * Math.max(0, S.ver - S.keep));
-
+function readI() {
   return {
-    poolGB, totalGB, totalTB, g, totalGB3, activeGB, versionGB, dupGB, coldGB, compGB,
-    archGB, archTB, remainGB, overNowGB, overAfterGB, over3GB,
-    spCostNow, spCostAfter, adlsMo, spEquivMo, savingMo, savingYr, saving3yr,
-    paybackMo, roi, healthScore, totalFiles, excessVer
+    lic:    getV('sl-lic'),
+    used:   getV('sl-used'),
+    need:   getV('sl-need'),
+    g:      getV('sl-growth')/100,
+    keep:   getV('sl-keep'),
+    vspct:  getV('sl-vspct')/100,
+    SP:     getV('sl-sprate'),
   };
 }
 
-/* ── Main calc ──────────────────────────────────────────────── */
+function bar(lbl,pct,col,val) {
+  return `<div class="pbar-row"><div class="pbar-lbl">${lbl}</div><div class="pbar-wrap"><div class="pbar" style="width:${Math.min(100,pct)}%;background:${col}"></div></div><div class="pbar-val" style="color:${col}">${val}</div></div>`;
+}
+
+let ch3yr=null, chTrend=null, chVer=null;
+
 function calc() {
-  readInputs();
-  const D = derive();
+  const I=readI();
+  const poolGB = 1024+I.lic*10;
+  const poolTB = poolGB/1024;
+  const usedTB = I.used+I.need;
+  const usedGB = usedTB*1024;
+  const gapTB  = usedTB-poolTB;
+  const overGB = Math.max(0,usedGB-poolGB);
 
-  calcTab_Calculator(D);
-  calcTab_Saving(D);
-  calcTab_Executive(D);
-  calcTab_BeforeAfter(D);
-}
+  // Version archival
+  const verGB  = usedGB*I.vspct;
+  const avgVer = 50;
+  const archR  = Math.max(0,(avgVer-I.keep)/avgVer)*0.65;
+  const archGB = Math.round(verGB*archR);
+  const archTB = archGB/1024;
 
-/* ── CALCULATOR TAB ─────────────────────────────────────────── */
-function calcTab_Calculator(D) {
-  setText('m-pool',   fmtTB(D.poolGB/1024));
-  setText('m-demand', fmtTB(D.totalTB));
-  setText('m-yr3',    fmtTB(D.totalGB3/1024));
+  const g=I.g, SP=I.SP;
 
-  const gapEl   = document.getElementById('m-gap');
-  const gapTile = document.getElementById('m-gap-tile');
-  const gapTB   = (D.totalGB - D.poolGB)/1024;
-  if(gapTB <= 0){
-    gapEl.textContent = fmtTB(Math.abs(Math.round(gapTB)))+' free';
-    gapEl.className = 'tile-val c-green';
-    gapTile.style.setProperty('--tile-accent','var(--green)');
-    setText('m-gap-sub','Within free entitlement');
+  // Year projections
+  const y = [0,1,2,3].map(n => {
+    const gb = usedGB*Math.pow(1+g,n);
+    const over = Math.max(0,gb-poolGB);
+    const optOver = Math.max(0,gb-archGB-poolGB);
+    return { gb, over, optOver };
+  });
+
+  const spY=[1,2,3].map(n=>y[n].over*SP*12);
+  const optY=[1,2,3].map(n=>y[n].optOver*SP*12);
+  const sp3=spY.reduce((a,v)=>a+v,0);
+  const opt3=optY.reduce((a,v)=>a+v,0);
+  const sav3=sp3-opt3;
+  const savYr=sav3/3;
+
+  // Hero KPIs
+  setT('ex-3yr', fmtC(sav3));
+  setT('ex-arch', fmtGB(archGB));
+  setT('ex-util', Math.round(usedGB/poolGB*100)+'%');
+  setT('ex-yr3', fmtC(spY[2]));
+
+  // Position tiles
+  setT('t-pool', fmtTB(poolTB));
+  setT('t-used', fmtTB(usedTB));
+  setT('t-used-sub', Math.round(usedGB/poolGB*100)+'% of free pool');
+  setT('t-yr3', fmtTB(y[3].gb/1024));
+  setT('t-yr3-sub', spY[2]>0 ? 'Yr 3 bill: '+fmtYr(spY[2]) : 'Within pool in yr 3');
+
+  const gEl=gel('t-gap'), gTile=gel('t-gap-tile');
+  if(gapTB<=0){
+    gEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' free'; gEl.className='tile-val c-green';
+    gTile.style.setProperty('--tile-accent','var(--green)'); setT('t-gap-sub','Within free entitlement');
   } else {
-    gapEl.textContent = '+'+fmtTB(Math.round(gapTB))+' over';
-    gapEl.className = 'tile-val c-red';
-    gapTile.style.setProperty('--tile-accent','var(--red)');
-    setText('m-gap-sub','Overage billing active');
+    gEl.textContent='+'+fmtTB(Math.round(gapTB))+' over'; gEl.className='tile-val c-red';
+    gTile.style.setProperty('--tile-accent','var(--red)'); setT('t-gap-sub','Overage: '+fmtYr(overGB*SP*12));
   }
 
-  // Headroom callout
-  const hc = document.getElementById('headroom-callout');
-  const g = D.g;
-  if(gapTB<=0 && D.over3GB===0){
-    hc.innerHTML=`<div class="callout green"><span class="callout-icon">✓</span><div class="callout-text"><strong>Within free pool today and in 3 years at ${S.growth}% growth.</strong> The saving case is the cost difference between buying extra SharePoint storage versus ADLS — a <strong>${Math.round(SP_RATE/ADLS_COOL)}× price difference</strong>. Any acquisition or growth spike is instantly solved at ADLS rates.</div></div>`;
-  } else if(gapTB<=0){
-    const yrs = Math.ceil(Math.log(D.poolGB/D.totalGB)/Math.log(1+g));
-    hc.innerHTML=`<div class="callout amber"><span class="callout-icon">⚠</span><div class="callout-text"><strong>Within free pool today — breaches entitlement in ~${yrs} years at current growth.</strong> Year-3 overage would reach ${fmtMo(D.over3GB*SP_RATE)}. Archiving now costs <strong>${fmtMo(D.adlsMo)}</strong> vs that future liability.</div></div>`;
-  } else {
-    hc.innerHTML=`<div class="callout red"><span class="callout-icon">▲</span><div class="callout-text"><strong>Currently ${fmtTB(Math.round(gapTB))} over free entitlement.</strong> Microsoft is already billing <strong>${fmtMo(D.spCostNow)}</strong> in overage. Archival removes ${fmtGB(D.archGB)} from SharePoint and reduces the bill to <strong>${fmtMo(D.spCostAfter)}</strong>.</div></div>`;
-  }
+  // Scan comparison
+  setT('sc-used', fmtTB(I.used));
+  setT('sc-ver',  fmtGB(Math.round(I.used*1024*I.vspct)));
+  setT('sc-arch', fmtGB(archGB));
+  setT('sc-save1', fmtYr(spY[0]-optY[0]));
+  setT('sc-growth', Math.round(I.g*100)+'%');
 
-  // 6-category cost breakdown
-  const cats_before = [
-    {label:'SP Overage Storage',   val:D.overNowGB*SP_RATE*12,     sub:`${fmtGB(D.overNowGB)} × $0.20/GB/mo`,   color:'var(--red)'},
-    {label:'ADLS Storage',         val:0,                           sub:'Not yet deployed',                      color:'var(--text3)'},
-    {label:'Transactions',         val:0,                           sub:'Not applicable',                        color:'var(--text3)'},
-    {label:'Metadata Indexing',    val:0,                           sub:'Included in M365',                      color:'var(--text3)'},
-    {label:'Monitoring',           val:0,                           sub:'Not applicable',                        color:'var(--text3)'},
-    {label:'Replication (LRS)',    val:D.overNowGB*SP_RATE*12*0.0, sub:'Included in SP',                        color:'var(--text3)'},
-  ];
-  const totalBefore = D.overNowGB*SP_RATE*12;
-  const cats_after = [
-    {label:'SP Overage (reduced)', val:D.spCostAfter*12,            sub:`${fmtGB(D.overAfterGB)} × $0.20/GB/mo`,color:'var(--amber)'},
-    {label:'ADLS Storage',         val:D.archGB*ADLS_COOL*12,       sub:`${fmtGB(D.archGB)} × $0.003/GB/mo`,    color:'var(--blue)'},
-    {label:'Transactions',         val:TRANS_MO*12,                  sub:'Est. 10K ops/day',                     color:'var(--teal)'},
-    {label:'Metadata Indexing',    val:0,                            sub:'Included in M365',                     color:'var(--text3)'},
-    {label:'Monitoring',           val:MONITOR*12,                   sub:'Azure Monitor alerts',                 color:'var(--purple)'},
-    {label:'Replication (LRS)',    val:D.archGB*ADLS_COOL*12*0.0,   sub:'LRS included',                         color:'var(--text3)'},
-  ];
-  const totalAfter = D.spCostAfter*12 + D.archGB*ADLS_COOL*12 + TRANS_MO*12 + MONITOR*12;
+  // Composition bars
+  gel('comp-bars').innerHTML =
+    bar('Total storage used',100,'var(--navy4)',fmtTB(usedTB))+
+    bar('Version copies',Math.round(I.vspct*100),'var(--amber)',fmtGB(Math.round(usedGB*I.vspct)))+
+    bar('Recoverable now',Math.round(archGB/usedGB*100),'var(--green)',fmtGB(archGB))+
+    bar('Active content',Math.round((usedGB-archGB)/usedGB*100),'var(--blue)',fmtGB(Math.round(usedGB-archGB)));
 
-  document.getElementById('cost-cat-current').innerHTML = cats_before.map(c=>
-    `<div class="cost-cat">
-      <div class="cost-cat-label">${c.label}</div>
-      <div class="cost-cat-val" style="color:${c.color}">${c.val>0?fmtC(c.val):'—'}</div>
-      <div class="cost-cat-sub">${c.sub}</div>
-    </div>`).join('');
-
-  document.getElementById('cost-cat-after').innerHTML = cats_after.map(c=>
-    `<div class="cost-cat">
-      <div class="cost-cat-label">${c.label}</div>
-      <div class="cost-cat-val" style="color:${c.color}">${c.val>0?fmtC(c.val):'—'}</div>
-      <div class="cost-cat-sub">${c.sub}</div>
-    </div>`).join('');
-
-  document.getElementById('calc-saving-banner').innerHTML =
-    `<span style="font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Annual saving </span>
-     <span style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--gold);letter-spacing:-.02em"> ${fmtYr(D.savingYr)}</span>
-     <span style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:16px">· 3-Year: ${fmtC(D.saving3yr)} · ROI: ${D.roi}% · Payback: ${D.paybackMo<=36?D.paybackMo+' months':'&gt;36 months'}</span>`;
-
-  // Scenario table
-  const scenarios = [
-    {label:'Current SP overage',      sub:'Excess over free pool today',         vol:Math.max(0,(D.totalGB-D.poolGB))},
-    {label:'Archivable version bloat', sub:'Versions beyond keep threshold',      vol:D.archGB, primary:true},
-    {label:'Acquisition content',     sub:'New content from merger/migration',    vol:S.acq*1024},
-    {label:'Year 3 demand overage',   sub:'If nothing archived — 3yr projection', vol:D.over3GB},
-  ].filter(s=>s.vol>0);
-
-  document.getElementById('cost-tbody').innerHTML = scenarios.map(s=>{
-    const spMo=s.vol*SP_RATE, adlsM=s.vol*ADLS_COOL, savMo=spMo-adlsM;
-    return `<tr class="${s.primary?'tr-hi':''}">
-      <td><div class="row-name">${s.label}${s.primary?' <span class="badge bo">primary target</span>':''}</div><div class="row-sub">${s.sub}</div></td>
-      <td>${fmtGB(s.vol)}</td>
-      <td class="c-red">${fmtMo(spMo)}<br><span style="font-size:10px;color:var(--text3)">${fmtYr(spMo*12)}</span></td>
-      <td class="c-green">${fmtMo(adlsM)}<br><span style="font-size:10px;color:var(--text3)">${fmtYr(adlsM*12)}</span></td>
-      <td class="c-gold">${fmtMo(savMo)}</td>
-      <td class="c-gold">${fmtYr(savMo*12)}</td>
+  // Financial table
+  gel('fin-tbody').innerHTML = `
+    <tr class="tr-alert">
+      <td><div class="rn">No action — pay SharePoint rate</div><div class="rs">$${SP.toFixed(2)}/GB/mo on every GB over free pool</div></td>
+      <td class="c-red">${fmtC(spY[0])}</td><td class="c-red">${fmtC(spY[1])}</td><td class="c-red">${fmtC(spY[2])}</td><td class="c-red">${fmtC(sp3)}</td>
+    </tr>
+    <tr class="tr-hi">
+      <td><div class="rn">StorageIQ optimised</div><div class="rs">Archive ${fmtGB(archGB)} of version history — residual overage only</div></td>
+      <td class="c-green">${fmtC(optY[0])}</td><td class="c-green">${fmtC(optY[1])}</td><td class="c-green">${fmtC(optY[2])}</td><td class="c-green">${fmtC(opt3)}</td>
+    </tr>
+    <tr class="tr-total">
+      <td><div class="rn" style="color:var(--gold)">Cost saving</div><div class="rs">Eliminated by version archival</div></td>
+      <td class="c-gold">${fmtC(spY[0]-optY[0])}</td><td class="c-gold">${fmtC(spY[1]-optY[1])}</td><td class="c-gold">${fmtC(spY[2]-optY[2])}</td>
+      <td class="c-gold" style="font-size:15px;font-weight:700">${fmtC(sav3)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:20px">All storage within free entitlement — saving is vs future overage cost</td></tr>`;
+  setT('fin-anno',`SharePoint rate: $${SP.toFixed(2)}/GB/mo · Growth: ${Math.round(I.g*100)}%/yr · ${comma(I.lic)} licences · ${fmtTB(poolTB)} free pool · ${fmtGB(archGB)} recoverable`);
+
+  // Summary box
+  const hl = sav3>0 ? `Eliminate ${fmtC(sav3)} in avoidable SharePoint costs over 3 years.` : `Lock in efficiency before growth forces overage.`;
+  setT('sum-hl',hl);
+  setT('sum-body', sav3>0
+    ? `With ${fmtGB(archGB)} of recoverable version history and ${Math.round(I.g*100)}% annual growth, your SharePoint overage bill reaches ${fmtYr(spY[2])} by year 3. Archiving excess versions removes the majority of that cost. These numbers become firm and board-ready after a live scan.`
+    : `At ${Math.round(I.g*100)}% annual growth your free pool will be breached within the projection window. Proactive version archival prevents any overage cost from accruing. Run a live scan to confirm the exact timeline.`);
+  setT('sum-big',fmtC(sav3));
+  setT('sum-note',`Year 1 saving: ${fmtC(spY[0]-optY[0])} · All estimates confirmed after live scan`);
+
+  // Calculator tab
+  setT('c-pool',fmtTB(poolTB));
+  setT('c-arch',fmtGB(archGB));
+  setT('c-save-yr',fmtYr(savYr));
+
+  const cGEl=gel('c-gap'), cGT=gel('c-gap-tile');
+  if(gapTB<=0){
+    cGEl.textContent=fmtTB(Math.abs(Math.round(gapTB)))+' free'; cGEl.className='tile-val c-green';
+    cGT.style.setProperty('--tile-accent','var(--green)'); setT('c-gap-sub','Within free entitlement');
+  } else {
+    cGEl.textContent='+'+fmtTB(Math.round(gapTB))+' over'; cGEl.className='tile-val c-red';
+    cGT.style.setProperty('--tile-accent','var(--red)'); setT('c-gap-sub','Overage billing active');
+  }
+
+  gel('calc-tbody').innerHTML=`
+    <tr><td><div class="rn">No action</div><div class="rs">Pay SP rate on all overage</div></td><td class="c-red">${fmtC(spY[0])}</td><td class="c-red">${fmtC(spY[1])}</td><td class="c-red">${fmtC(spY[2])}</td><td class="c-red">${fmtC(sp3)}</td><td class="c-dim">—</td></tr>
+    <tr class="tr-hi"><td><div class="rn">StorageIQ optimised</div><div class="rs">Archive ${fmtGB(archGB)} of versions</div></td><td class="c-green">${fmtC(optY[0])}</td><td class="c-green">${fmtC(optY[1])}</td><td class="c-green">${fmtC(optY[2])}</td><td class="c-green">${fmtC(opt3)}</td><td class="c-gold">${fmtC(sav3)}</td></tr>`;
+  setT('calc-anno',`Rate: $${SP.toFixed(2)}/GB/mo · ${Math.round(I.g*100)}% growth · ${comma(I.lic)} licences`);
+
+  // 36-month trend
+  const mos=Array.from({length:37},(_,i)=>i);
+  const spLine=mos.map(m=>{const gb=usedGB*Math.pow(1+g/12,m);return Math.max(0,gb-poolGB)*SP*m;});
+  const optLine=mos.map(m=>{const gb=(usedGB-archGB)*Math.pow(1+g/12,m);return Math.max(0,gb-poolGB)*SP*m;});
+  renderTrend(mos.map(m=>m===0?'Now':m%6===0?'Mo '+m:''),spLine,optLine);
+
+  let crossMo=null;
+  for(let m=1;m<=36;m++){if(spLine[m]>0&&optLine[m]<spLine[m]){crossMo=m;break;}}
+  setT('trend-anno', crossMo
+    ? `Optimised path diverges from baseline at month ${crossMo}. Saving compounds as volume grows. 36-month cumulative saving: ${fmtC(spLine[36]-optLine[36])}.`
+    : `Both paths remain low today. As growth pushes storage up, the gap between no-action and optimised widens significantly.`);
+
+  // 3yr bar chart
+  render3yr(spY,optY);
+
+  syncSliders(1);
 }
 
-/* ── SAVING TAB ─────────────────────────────────────────────── */
-function calcTab_Saving(D) {
-  document.getElementById('arch-bars').innerHTML = `
-    ${bar('Total SP today',   100, 'var(--bg4)',   fmtTB(D.totalTB))}
-    ${bar('Version storage',  Math.round(D.versionGB/D.totalGB*100), 'var(--amber)', fmtTB(D.versionGB/1024))}
-    ${bar('Archivable',       Math.min(100,Math.round(D.archGB/D.totalGB*100)), 'var(--green)', fmtGB(D.archGB))}
-    ${bar('Stays in SP',      Math.round(D.remainGB/D.totalGB*100), 'var(--blue)',  fmtGB(Math.round(D.remainGB)))}
-  `;
+const opts = (extra={}) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{labels:{color:'#9AA3BC',boxWidth:14,boxHeight:2,font:{size:11}}},
+    tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#9AA3BC',bodyColor:'#F0F2F8',padding:12}
+  },
+  ...extra
+});
 
-  document.getElementById('cost-after').innerHTML = `
-    <table class="dt">
-      <tbody>
-        <tr><td style="font-size:12px;color:var(--text2)">SP overage (before)</td><td class="c-red">${fmtMo(D.spCostNow)}</td></tr>
-        <tr><td style="font-size:12px;color:var(--text2)">SP overage (after archival)</td><td class="c-green">${fmtMo(D.spCostAfter)}</td></tr>
-        <tr><td style="font-size:12px;color:var(--text2)">ADLS cool tier storage</td><td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${fmtMo(D.archGB*ADLS_COOL)}</td></tr>
-        <tr><td style="font-size:12px;color:var(--text2)">Transactions + monitoring</td><td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${fmtMo(TRANS_MO+MONITOR)}</td></tr>
-        <tr><td style="font-size:12px;color:var(--text2)">Equivalent SP cost for archive vol.</td><td class="c-red">${fmtMo(D.spEquivMo)}</td></tr>
-        <tr class="tr-total"><td style="font-size:13px;font-weight:500;color:var(--green)">Net monthly saving</td><td style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--green)">${fmtMo(D.savingMo)}</td></tr>
-      </tbody>
-    </table>`;
-
-  const ratio = Math.round(D.spEquivMo/Math.max(D.archGB*ADLS_COOL,0.01));
-  document.getElementById('bar-compare').innerHTML = `
-    ${bar('Buy extra SP storage', 100, 'var(--red)', fmtMo(D.spEquivMo), 'c-red')}
-    ${bar('Archive to ADLS cool', Math.max(1,Math.round(D.archGB*ADLS_COOL/D.spEquivMo*100)), 'var(--green)', fmtMo(D.archGB*ADLS_COOL), 'c-green')}
-    <div style="margin-top:12px;padding:10px 14px;background:var(--gold-dim);border:1px solid rgba(200,168,75,0.15);border-radius:var(--r);font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.04em">
-      ADLS is ${ratio}× cheaper per GB · Monthly saving = ${fmtMo(D.savingMo)} · Annual = ${fmtYr(D.savingYr)}
-    </div>`;
-
-  const months = Array.from({length:37},(_,i)=>i);
-  const spLine = months.map(m=>{
-    const futGB = D.totalGB*Math.pow(1+D.g/12,m);
-    return Math.round(Math.max(0,futGB-D.poolGB)*SP_RATE*m);
+function render3yr(sp,opt) {
+  const ctx=gel('chart3yr'); if(!ctx) return;
+  if(ch3yr) ch3yr.destroy();
+  ch3yr=new Chart(ctx.getContext('2d'),{
+    type:'bar',
+    data:{labels:['Year 1','Year 2','Year 3'],datasets:[
+      {label:'No action',data:sp,backgroundColor:'rgba(224,82,82,0.6)',borderRadius:4,borderWidth:0},
+      {label:'StorageIQ optimised',data:opt,backgroundColor:'rgba(52,196,122,0.6)',borderRadius:4,borderWidth:0}
+    ]},
+    options:{...opts(),scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A'}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',callback:v=>v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
   });
-  const adlsLine = months.map(m=>Math.round(POC_COST + D.archGB*ADLS_COOL*m));
-  renderChart('costChart', months.map(m=>m===0?'Now':m%6===0?'Mo '+m:''), spLine, adlsLine);
-
-  let beMo=999;
-  for(let m=1;m<=36;m++){if(adlsLine[m]<=spLine[m]){beMo=m;break;}}
-  setText('payback-anno',
-    beMo<=36
-      ? `▲ ADLS line crosses below SharePoint line at month ${beMo} — full payback on ~$65K build cost in ${beMo} months.`
-      : `Build cost ~$65K amortised over 36 months = ${fmtC(POC_COST/36,0)}/mo add-on. Breakeven on SP cost avoidance at current growth trajectory.`
-  );
-
-  setText('verdict-body',
-    `Archiving ${fmtGB(D.archGB)} of version history to ADLS Gen2 cool tier costs ${fmtMo(D.archGB*ADLS_COOL)} ` +
-    `versus ${fmtMo(D.spEquivMo)} to hold the same volume in SharePoint — a ${Math.round(SP_RATE/ADLS_COOL)}× ` +
-    `price difference on published Microsoft and Azure rates. ` +
-    (D.paybackMo<=36?`The ~$65K build cost recovers in ${D.paybackMo} months. `:'') +
-    `Over 3 years the avoided spend compounds to ${fmtC(D.saving3yr)}.`
-  );
-  setText('verdict-num', fmtC(D.saving3yr));
-  setText('verdict-payback', D.paybackMo<=36?`Build payback: ${D.paybackMo} months`:'Saving grows with data volume');
 }
 
-/* ── EXECUTIVE VIEW TAB ─────────────────────────────────────── */
-function calcTab_Executive(D) {
-  setText('exec-annual-savings',  fmtYr(D.savingYr));
-  setText('exec-current-cost',    fmtYr(D.spCostNow*12||D.spEquivMo*12));
-  setText('exec-optimized-cost',  fmtYr(D.spCostAfter*12 + D.archGB*ADLS_COOL*12 + (TRANS_MO+MONITOR)*12));
-  setText('exec-3yr-savings',     fmtC(D.saving3yr));
-  setText('exec-roi',             D.roi+'%');
-  setText('exec-monthly-saving',  fmtMo(D.savingMo));
-  setText('exec-payback',         D.paybackMo<=36?D.paybackMo+' months':'>36 mo');
-  setText('exec-storage-reduction', pct(D.archGB, D.totalGB));
-
-  // Cost before table
-  const currentAnnual = [
-    {cat:'SharePoint Overage Storage', vol:fmtGB(D.overNowGB), rate:'$0.20/GB/mo', annual:fmtC(D.spCostNow*12), cls:'c-red'},
-    {cat:'Microsoft Licensing',        vol:comma(S.lic)+' seats', rate:'E3/E5 included', annual:'$0 (pooled)', cls:'c-dim'},
-    {cat:'Organic Growth (yr 3)',      vol:fmtGB(D.over3GB), rate:'$0.20/GB/mo proj.', annual:fmtC(D.over3GB*SP_RATE*12), cls:'c-amber'},
-  ];
-  document.getElementById('exec-cost-before-body').innerHTML = currentAnnual.map(r=>
-    `<tr><td><div class="row-name">${r.cat}</div></td><td class="c-dim">${r.vol}</td><td class="c-dim">${r.rate}</td><td class="${r.cls}">${r.annual}</td></tr>`
-  ).join('')+`<tr class="tr-total"><td colspan="3" style="text-align:left;font-weight:500">Total Annual Cost</td><td class="c-red">${fmtC((D.spCostNow+(D.over3GB*SP_RATE))*12/2)}</td></tr>`;
-
-  const afterAnnual = [
-    {cat:'SharePoint (reduced)',   vol:fmtGB(D.overAfterGB), rate:'$0.20/GB/mo', annual:fmtC(D.spCostAfter*12), cls:'c-amber'},
-    {cat:'ADLS Cool Tier Storage', vol:fmtGB(D.archGB),      rate:'$0.003/GB/mo', annual:fmtC(D.archGB*ADLS_COOL*12), cls:'c-blue'},
-    {cat:'Transactions',           vol:'Est. 10K ops/day',   rate:'$0.0004/10K', annual:fmtC(TRANS_MO*12), cls:'c-teal'},
-    {cat:'Monitoring & Alerts',    vol:'Azure Monitor',      rate:'flat',         annual:fmtC(MONITOR*12), cls:'c-purple'},
-  ];
-  const optimizedTotal = D.spCostAfter*12 + D.archGB*ADLS_COOL*12 + TRANS_MO*12 + MONITOR*12;
-  document.getElementById('exec-cost-after-body').innerHTML = afterAnnual.map(r=>
-    `<tr><td><div class="row-name">${r.cat}</div></td><td class="c-dim">${r.vol}</td><td class="c-dim">${r.rate}</td><td class="${r.cls}">${r.annual}</td></tr>`
-  ).join('')+`<tr class="tr-total"><td colspan="3" style="text-align:left;font-weight:500;color:var(--green)">Optimized Annual Cost</td><td class="c-green">${fmtC(optimizedTotal)}</td></tr>`;
-
-  // Exec 36-month chart
-  const months = Array.from({length:37},(_,i)=>i);
-  const spLine = months.map(m=>{
-    const futGB = D.totalGB*Math.pow(1+D.g/12,m);
-    return Math.round(Math.max(0,futGB-D.poolGB)*SP_RATE*m);
+function renderTrend(labels,sp,opt) {
+  const ctx=gel('trend-chart'); if(!ctx) return;
+  if(chTrend) chTrend.destroy();
+  chTrend=new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'No action — SP overage accumulates',data:sp,borderColor:'#E05252',backgroundColor:'rgba(224,82,82,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3},
+      {label:'StorageIQ optimised',data:opt,borderColor:'#34C47A',backgroundColor:'rgba(52,196,122,0.05)',borderWidth:2,pointRadius:0,fill:true,tension:0.3,borderDash:[4,3]}
+    ]},
+    options:{...opts({interaction:{mode:'index',intersect:false}}),
+      scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{maxTicksLimit:7,color:'#4E5A7A'}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A',callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}}}
   });
-  const adlsLine = months.map(m=>Math.round(POC_COST + D.archGB*ADLS_COOL*m));
-  renderChart('execCostChart', months.map(m=>m===0?'Now':m%6===0?'Mo '+m:''), spLine, adlsLine);
-
-  let beMo=999;
-  for(let m=1;m<=36;m++){if(adlsLine[m]<=spLine[m]){beMo=m;break;}}
-  setText('exec-payback-anno',
-    beMo<=36
-      ? `▲ Optimized cost crosses below status-quo cost at month ${beMo}. Full return on $65K build investment in ${beMo} months.`
-      : `Archival reduces monthly run-rate immediately. Build cost payback depends on overage billing activation timeline.`
-  );
 }
 
-/* ── BEFORE / AFTER TAB ─────────────────────────────────────── */
-function calcTab_BeforeAfter(D) {
-  const totalTB     = D.totalTB;
-  const activeTB    = D.activeGB/1024;
-  const archTB      = D.archGB/1024;
-  const monthlyBefore = D.spCostNow;
-  const monthlyAfter  = D.spCostAfter + D.archGB*ADLS_COOL + TRANS_MO + MONITOR;
-  const annualBefore  = monthlyBefore*12;
-  const annualAfter   = monthlyAfter*12;
-  const savMo         = monthlyBefore - monthlyAfter;
-  const savYr         = savMo*12;
-
-  setText('ba-before-storage',  fmtTB(Math.round(totalTB)));
-  setText('ba-before-monthly',  fmtMo(monthlyBefore));
-  setText('ba-before-annual',   fmtYr(annualBefore));
-  setText('ba-before-bloat',    fmtTB(D.versionGB/1024));
-  setText('ba-before-cold',     fmtTB(D.coldGB/1024));
-  setText('ba-before-3yr',      fmtC(monthlyBefore*36));
-
-  setText('ba-after-sp',        fmtTB(Math.round(D.remainGB/1024)));
-  setText('ba-after-adls',      fmtGB(D.archGB));
-  setText('ba-after-monthly',   fmtMo(monthlyAfter));
-  setText('ba-after-annual',    fmtYr(annualAfter));
-  setText('ba-savings-monthly', fmtMo(Math.max(0,savMo)));
-  setText('ba-savings-annual',  fmtYr(Math.max(0,savYr)));
-  setText('ba-after-3yr',       fmtC(monthlyAfter*36));
-}
-
-/* ── DISCOVERY TAB (demo data) ──────────────────────────────── */
-const DEMO_SITES = [
-  {name:'Global Projects Hub',       dept:'PMO',         usedGB:48200, avgVer:312, archPct:0.74},
-  {name:'Engineering Documentation', dept:'Technology',  usedGB:36800, avgVer:287, archPct:0.71},
-  {name:'Finance & Compliance',      dept:'Finance',     usedGB:29400, avgVer:198, archPct:0.56},
-  {name:'HR Systems & Policies',     dept:'People',      usedGB:18900, avgVer:445, archPct:0.82},
-  {name:'Marketing Collateral',      dept:'Marketing',   usedGB:15600, avgVer:156, archPct:0.48},
-  {name:'Legal & Contracts',         dept:'Legal',       usedGB:12200, avgVer:521, archPct:0.86},
-  {name:'Operations Playbooks',      dept:'Operations',  usedGB:9800,  avgVer:89,  archPct:0.32},
-  {name:'Product Roadmaps',          dept:'Product',     usedGB:7400,  avgVer:231, archPct:0.62},
+// Demo scan
+const DEMO=[
+  {name:'Global Projects Hub',dept:'PMO',gb:22400,ver:312,arch:.74},
+  {name:'Engineering Docs',dept:'Technology',gb:18800,ver:287,arch:.71},
+  {name:'Finance & Compliance',dept:'Finance',gb:14200,ver:198,arch:.56},
+  {name:'HR Systems',dept:'People',gb:9800,ver:445,arch:.82},
+  {name:'Marketing Assets',dept:'Marketing',gb:7600,ver:156,arch:.48},
+  {name:'Legal & Contracts',dept:'Legal',gb:6200,ver:521,arch:.86},
+  {name:'Operations',dept:'Operations',gb:4800,ver:89,arch:.32},
+  {name:'Product Roadmaps',dept:'Product',gb:3700,ver:231,arch:.62},
 ];
 
-// Sites currently driving the dashboard. Defaults to demo data;
-// connectLive() swaps in real sites fetched from the Azure Function.
-let ACTIVE_SITES = DEMO_SITES;
-let IS_LIVE_DATA = false;
+function runDemo() {
+  switchTab('discovery');
+  const I=readI();
+  const poolGB=1024+I.lic*10;
+  const total=DEMO.reduce((a,s)=>a+s.gb,0);
+  const archiv=DEMO.reduce((a,s)=>a+Math.round(s.gb*0.58*s.arch),0);
+  const headroom=poolGB-total;
 
-function runDemo(sitesArg) {
-  // Render from whatever site array is passed (live) or the demo set.
-  const SITES = sitesArg && sitesArg.length ? sitesArg : DEMO_SITES;
-  ACTIVE_SITES = SITES;
+  setT('d-pool',fmtTB(poolGB/1024)); setT('d-used',fmtTB(total/1024)); setT('d-vers',fmtGB(archiv));
 
-  document.getElementById('discovery-results').style.display = 'block';
-  document.getElementById('connect-instructions').style.display = 'none';
+  const gE=gel('d-gap'),gT=gel('d-gap-tile');
+  if(headroom>=0){gE.textContent=fmtGB(headroom)+' free';gE.className='tile-val c-green';gT.style.setProperty('--tile-accent','var(--green)');setT('d-gap-sub','Within free entitlement');}
+  else{gE.textContent=fmtGB(Math.abs(headroom))+' over';gE.className='tile-val c-red';gT.style.setProperty('--tile-accent','var(--red)');setT('d-gap-sub','Overage billing active');}
 
-  const totalUsedGB  = SITES.reduce((a,s)=>a+s.usedGB,0);
-  const totalTB      = totalUsedGB/1024;
-  const poolGB       = 1024 + 43000*10;
-  const archivableGB = SITES.reduce((a,s)=>a+Math.round(s.usedGB*0.58*s.archPct),0);
-  const activeGB     = totalUsedGB*0.19;
-  const coldGB       = totalUsedGB*0.25;
-  const versionGB    = totalUsedGB*0.58;
-  const dupGB        = totalUsedGB*0.095;
-  const compGB       = totalUsedGB*0.051;
-  const savingMoDemo = archivableGB*(SP_RATE - ADLS_COOL);
-  const annualSavings= savingMoDemo*12;
-  const avgVer       = Math.round(SITES.reduce((a,s)=>a+s.avgVer,0)/SITES.length);
-  const totalFiles   = Math.round(totalUsedGB * FILES_PER_GB);
-  const excessVer    = Math.round(totalFiles * 0.65 * Math.max(0, avgVer - 5));
-
-  // Health score
-  const verP  = Math.min(40, Math.round((avgVer-5)/avgVer*40));
-  const overP = 0;
-  const coldP = Math.min(20, Math.round((coldGB+versionGB)/totalUsedGB*20));
-  const growP = Math.min(10, Math.round((18-5)/35*10));
-  const health= Math.max(20, 100-verP-overP-coldP-growP);
-
-  // Executive Summary Cards
-  setText('d-total',       fmtTB(Math.round(totalTB)));
-  setText('d-total-sub',   comma(SITES.length)+(IS_LIVE_DATA?' site collections · live tenant data':' site collections · 43,000 licences'));
-  setText('d-active',      fmtTB(activeGB/1024));
-  setText('d-cold',        fmtTB(coldGB/1024));
-  setText('d-vers',        fmtGB(archivableGB));
-  setText('d-savings-opp', fmtYr(annualSavings));
-
-  // Health score
-  const hBar = document.getElementById('d-health-bar');
-  const hNum = document.getElementById('d-health-score');
-  hNum.textContent = health+'/100';
-  hBar.style.width = health+'%';
-  const hLabel = document.getElementById('d-health-label');
-  if(health>=80){ hBar.style.background='var(--green)'; hNum.className='health-score-num c-green'; hLabel.textContent='Good'; }
-  else if(health>=60){ hBar.style.background='var(--amber)'; hNum.className='health-score-num c-amber'; hLabel.textContent='Needs Attention'; }
-  else { hBar.style.background='var(--red)'; hNum.className='health-score-num c-red'; hLabel.textContent='Critical'; }
-
-  // Storage Composition bars
-  document.getElementById('composition-bars').innerHTML = `
-    ${bar('Active Files',          Math.round(activeGB/totalUsedGB*100),   'var(--green)',  fmtTB(activeGB/1024)+' ('+Math.round(activeGB/totalUsedGB*100)+'%)')}
-    ${bar('Historical Versions',   Math.round(versionGB/totalUsedGB*100),  'var(--amber)',  fmtTB(versionGB/1024)+' ('+Math.round(versionGB/totalUsedGB*100)+'%)')}
-    ${bar('Cold Files (>90 days)', Math.round(coldGB/totalUsedGB*100),     'var(--text3)',  fmtTB(coldGB/1024)+' ('+Math.round(coldGB/totalUsedGB*100)+'%)')}
-    ${bar('Duplicate Content',     Math.round(dupGB/totalUsedGB*100),      'var(--blue)',   fmtTB(dupGB/1024)+' ('+Math.round(dupGB/totalUsedGB*100)+'%)')}
-    ${bar('Compliance Retention',  Math.round(compGB/totalUsedGB*100),     'var(--purple)', fmtTB(compGB/1024)+' ('+Math.round(compGB/totalUsedGB*100)+'%)')}
-  `;
-
-  // Version Bloat Intelligence
-  setText('vb-files',    comma(totalFiles)+' files');
-  setText('vb-avg-ver',  avgVer+' versions');
-  setText('vb-rec-ver',  '5 versions');
-  setText('vb-excess',   comma(excessVer)+' excess');
-  setText('vb-storage',  fmtGB(archivableGB));
-  setText('vb-recovery', fmtMo(savingMoDemo));
-
-  setText('version-anno',
-    `Average ${avgVer} versions/file vs recommended 5 — ${Math.round((avgVer-5)/avgVer*100)}% of version storage is recoverable. ` +
-    `Sites highlighted in red exceed 400 avg versions.`);
-
-  // Top Cost Contributors table
-  document.getElementById('sites-tbody').innerHTML = SITES.map(s=>{
-    const pctOfTotal = Math.round(s.usedGB/totalUsedGB*100);
-    const archGB_s   = Math.round(s.usedGB*0.58*s.archPct);
-    const monthlyCost= archGB_s*SP_RATE;
-    const annualSave = archGB_s*(SP_RATE-ADLS_COOL)*12;
-    const riskBadge  = s.avgVer>400
-      ? '<span class="badge br">High bloat</span>'
-      : s.avgVer>200 ? '<span class="badge ba">Medium</span>' : '<span class="badge bg">Low</span>';
-    const barW = Math.round(pctOfTotal*0.7);
-    return `<tr>
-      <td><div class="row-name">${s.name}</div></td>
-      <td><span class="badge bt">${s.dept}</span></td>
-      <td><span style="display:inline-block;width:${barW}px;height:4px;background:var(--blue);border-radius:2px;vertical-align:middle;margin-right:8px"></span>${fmtGB(s.usedGB)}</td>
-      <td class="c-red">${fmtMo(monthlyCost)}</td>
-      <td class="c-green">${fmtGB(archGB_s)}</td>
-      <td class="c-gold">${fmtYr(annualSave)}</td>
-      <td>${riskBadge}</td>
-    </tr>`;
+  gel('demo-tbody').innerHTML=DEMO.map(s=>{
+    const p=Math.round(s.gb/total*100);
+    const a=Math.round(s.gb*0.58*s.arch);
+    const bw=Math.round(p*0.9);
+    const rb=s.ver>400?'<span class="badge br">High bloat</span>':s.ver>200?'<span class="badge ba">Moderate</span>':'<span class="badge bg">Low</span>';
+    return `<tr><td><div class="rn">${s.name}</div></td><td><span class="badge bt">${s.dept}</span></td><td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(s.gb)}</td><td class="c-dim">${p}%</td><td class="c-amber">${s.ver}</td><td class="c-green">${fmtGB(a)}</td><td>${rb}</td></tr>`;
   }).join('');
 
-  // AI Recommendations
-  const recs = [
-    {priority:'high',  icon:'🔴', title:'Engineering Documentation — Critical Version Bloat',
-     desc:`Contains 36 TB of version history. Average 287 versions/file vs recommended 5. Archiving excess versions reduces storage by 71% with zero user impact.`,
-     saving:`Recovery: ${fmtGB(Math.round(36800*0.58*0.71))} · ${fmtYr(Math.round(36800*0.58*0.71)*(SP_RATE-ADLS_COOL)*12)} annual saving`,
-     badges:['High Impact','Quick Win']},
-    {priority:'high',  icon:'🔴', title:'Legal & Contracts — Exceeds Version Retention by 10,320%',
-     desc:`521 average versions per file. Recommended retention is 5. Legal content can safely archive to ADLS with Legal Hold and compliance markers preserved.`,
-     saving:`Recovery: ${fmtGB(Math.round(12200*0.58*0.86))} · ${fmtYr(Math.round(12200*0.58*0.86)*(SP_RATE-ADLS_COOL)*12)} annual saving`,
-     badges:['Compliance Risk','Legal Hold Ready']},
-    {priority:'high',  icon:'🔴', title:'HR Systems — 8 Years of Inactive Content Detected',
-     desc:`HR Portal contains 18.9 TB across ${Math.round(18900*FILES_PER_GB/1000)}K files. 82% of content has not been accessed in over 90 days. Policy documents from 2016–2019 are candidates for archive tier.`,
-     saving:`Recovery: ${fmtGB(Math.round(18900*0.58*0.82))} · ${fmtYr(Math.round(18900*0.58*0.82)*(SP_RATE-ADLS_COOL)*12)} annual saving`,
-     badges:['Cold Content','GDPR Review']},
-    {priority:'medium', icon:'🟡', title:'Marketing Collateral — 14 TB of Duplicate Files',
-     desc:`Duplicate detection identified 14 TB of content duplicated across site collections. Deduplication combined with version archival could reduce Marketing storage by 48%.`,
-     saving:`Recovery: ${fmtGB(Math.round(15600*0.48))} · ${fmtYr(Math.round(15600*0.48)*(SP_RATE-ADLS_COOL)*12)} annual saving`,
-     badges:['Duplicates','Dedup Candidate']},
-    {priority:'medium', icon:'🟡', title:'Finance Site — Version Retention Exceeds Policy by 180%',
-     desc:`Finance compliance requires 7-year retention. Current average of 198 versions far exceeds this. Versions beyond retention window can be permanently deleted, not just archived.`,
-     saving:`Delete candidates: ${fmtGB(Math.round(29400*0.15))} · Immediate cost elimination`,
-     badges:['Delete Eligible','FINRA Aligned']},
-    {priority:'medium', icon:'🟡', title:'Global Projects Hub — PMO Archive Not Enforced',
-     desc:`Completed projects from 2020–2022 remain in active SharePoint storage. ${fmtGB(Math.round(48200*0.4))} of content is from closed projects and should be moved to cold archive tier.`,
-     saving:`Recovery: ${fmtGB(Math.round(48200*0.74))} · ${fmtYr(Math.round(48200*0.74)*(SP_RATE-ADLS_COOL)*12)} annual saving`,
-     badges:['Cold Archive','Project Lifecycle']},
-    {priority:'low',   icon:'🟢', title:'Implement Automatic Version Lifecycle Policy',
-     desc:`Deploying a tenant-wide version policy capping versions at 5 will prevent bloat from recurring. Estimated to reduce annual storage growth from 18%/yr to under 5%/yr.`,
-     saving:`Long-term: prevents ~${fmtGB(Math.round(totalUsedGB*0.13))} of new version accumulation per year`,
-     badges:['Preventive','Policy Change']},
-  ];
+  const vGB=total*0.58;
+  gel('demo-bars').innerHTML=
+    bar('Total used',100,'var(--navy4)',fmtTB(total/1024))+
+    bar('Version copies',58,'var(--amber)',fmtGB(Math.round(vGB)))+
+    bar('Recoverable',Math.round(archiv/total*100),'var(--green)',fmtGB(archiv))+
+    bar('Active content',Math.round((total-archiv)/total*100),'var(--blue)',fmtGB(total-archiv));
 
-  document.getElementById('ai-recommendations').innerHTML = recs.map(r=>
-    `<div class="ai-rec">
-      <div class="ai-rec-icon ${r.priority}">${r.icon}</div>
-      <div class="ai-rec-body">
-        <div class="ai-rec-title">${r.title}</div>
-        <div class="ai-rec-desc">${r.desc}</div>
-        <div class="ai-rec-saving">${r.saving}</div>
-        <div class="ai-rec-meta">${r.badges.map(b=>`<span class="badge bo">${b}</span>`).join('')}</div>
-      </div>
-    </div>`
-  ).join('');
-
-  // Licence table
-  setText('lic-sub', `+10 GB per assigned licence · ${comma(43000)} licences`);
-  setText('lic-pool-vol', `${comma(430)} TB`);
-  setText('lic-total', fmtTB(poolGB/1024));
-
-  renderVersionChart(SITES.map(s=>s.name.split(' ')[0]), SITES.map(s=>s.avgVer));
-
-  switchTab('discovery');
-  document.getElementById('discovery-results').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-/* ── Helpers ────────────────────────────────────────────────── */
-function bar(label, pct, color, val, valClass='') {
-  const pctCapped = Math.min(100, Math.max(0, pct));
-  return `<div class="pbar-row">
-    <div class="pbar-label">${label}</div>
-    <div class="pbar-wrap"><div class="pbar" style="width:${pctCapped}%;background:${color}"></div></div>
-    <div class="pbar-val ${valClass}" style="color:${valClass?'':color}">${val}</div>
-  </div>`;
-}
-
-function setText(id, txt) {
-  const el = document.getElementById(id);
-  if(el) el.textContent = txt;
-}
-
-/* ── Charts ─────────────────────────────────────────────────── */
-const chartInstances = {};
-function renderChart(canvasId, labels, spData, adlsData) {
-  const ctx = document.getElementById(canvasId);
-  if(!ctx) return;
-  if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
-  Chart.defaults.color = '#4A526B';
-  Chart.defaults.font.family = "'JetBrains Mono', monospace";
-  Chart.defaults.font.size = 10;
-  chartInstances[canvasId] = new Chart(ctx.getContext('2d'), {
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'No action — buy more SharePoint', data:spData, borderColor:'#E05252', backgroundColor:'rgba(224,82,82,0.05)', borderWidth:2, pointRadius:0, fill:true, tension:0.3},
-        {label:'ADLS archival (incl. $65K build)', data:adlsData, borderColor:'#3EC47A', backgroundColor:'rgba(62,196,122,0.05)', borderWidth:2, pointRadius:0, fill:true, tension:0.3, borderDash:[4,3]}
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{labels:{color:'#8892B0',boxWidth:14,boxHeight:2,font:{size:11},usePointStyle:false}},
-        tooltip:{backgroundColor:'#0D1020',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#8892B0',bodyColor:'#E6E8F0',padding:12,
-          callbacks:{label:c=>' '+c.dataset.label+': $'+Math.round(c.parsed.y).toLocaleString()}}
-      },
-      scales:{
-        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{maxTicksLimit:7,color:'#4A526B'}},
-        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4A526B',
-          callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1000?'$'+Math.round(v/1000)+'K':'$'+v}}
-      }
-    }
-  });
-}
-
-let verChart = null;
-function renderVersionChart(labels, data) {
-  const ctx = document.getElementById('versionChart');
-  if(!ctx) return;
-  if(verChart) verChart.destroy();
-  verChart = new Chart(ctx.getContext('2d'), {
+  if(chVer) chVer.destroy();
+  chVer=new Chart(gel('ver-chart').getContext('2d'),{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'Avg versions per file',
-        data,
-        backgroundColor:data.map(v=>v>400?'rgba(224,82,82,0.7)':v>200?'rgba(217,122,50,0.7)':'rgba(62,196,122,0.7)'),
-        borderRadius:3,borderWidth:0,
-      }]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#0D1020',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#8892B0',bodyColor:'#E6E8F0',padding:10}
-      },
-      scales:{
-        x:{grid:{display:false},ticks:{color:'#4A526B',font:{size:10}}},
-        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4A526B'}}
-      }
-    }
+    data:{labels:DEMO.map(s=>s.name.split(' ')[0]),datasets:[{label:'Avg versions per file',data:DEMO.map(s=>s.ver),backgroundColor:DEMO.map(s=>s.ver>400?'rgba(224,82,82,0.65)':s.ver>200?'rgba(232,147,58,0.65)':'rgba(52,196,122,0.65)'),borderRadius:3,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0F1526',borderColor:'rgba(255,255,255,0.08)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'#4E5A7A',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4E5A7A'}}}}
   });
+
+  gel('demo-results').style.display='block';
+  setT('scan-lbl','DEMO SCAN');
+  gel('demo-results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* ── Connect / Live ─────────────────────────────────────────── */
-function showConnectInstructions() {
-  const el = document.getElementById('connect-instructions');
-  el.style.display = el.style.display==='none'?'block':'none';
-}
-
-// Base URL of the Azure Function that proxies Microsoft Graph.
-// The function receives the credentials, mints a token server-side
-// (so the secret is never exposed in Graph/CORS calls), and returns
-// parsed per-site usage JSON.
-// StorageIQ scanner agent (client's own Azure). Both the fast usagemetrics
-// path and the deep scan live here. Override per-tenant via ?scan=<url>.
+// ── StorageIQ scanner agent (client's own Azure). Override per-tenant via
+// ?scan=<url>. Falls back to the AAYS agent deployed for this session. ────
 var FUNC_BASE = (function () {
   try {
     var q = new URLSearchParams(window.location.search).get('scan');
@@ -1833,333 +885,85 @@ var FUNC_BASE = (function () {
   return 'https://storageiq-scan-aays.azurewebsites.net/api';
 })();
 
-/* ── Deep scan (Durable background job — exact version counts) ───────── */
-var _scanPoll = null;
-function _setProgress(done, total, phase) {
-  var pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  document.getElementById('scan-progress').style.display = 'block';
-  document.getElementById('scan-bar').style.width = pct + '%';
-  document.getElementById('scan-pct').textContent = pct + '%';
-  document.getElementById('scan-count').textContent = done + ' / ' + total + ' sites';
-  if (phase) document.getElementById('scan-phase').textContent = phase;
-}
-async function startDeepScan() {
-  var t=document.getElementById('inp-tenant').value.trim();
-  var c=document.getElementById('inp-client').value.trim();
-  var s=document.getElementById('inp-secret').value.trim();
-  if(!t||!c||!s){alert('Please fill in all three credential fields.');return;}
-  if(!confirm('Deep scan reads every file version across the tenant. On a large tenant this can take many minutes to hours. Continue?')) return;
-  _setProgress(0, 0, 'Starting deep scan…');
-  try {
-    var startResp = await fetch(FUNC_BASE + '/startscan', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ tenant_id:t, client_id:c, client_secret:s })
-    });
-    var start = await startResp.json();
-    var statusUrl = start.statusQueryGetUri || (FUNC_BASE + '/scanstatus?id=' + start.id);
-    if (_scanPoll) clearInterval(_scanPoll);
-    _scanPoll = setInterval(async function () {
-      try {
-        var r = await fetch(statusUrl);
-        var st = await r.json();
-        var cs = st.customStatus || {};
-        var done = cs.sites_done || 0, total = cs.sites_total || 0;
-        var phase = (cs.phase === 'done') ? 'Deep scan complete'
-                  : (cs.phase === 'computing') ? 'Computing savings…'
-                  : (total ? 'Scanning tenant…' : 'Enumerating sites…');
-        _setProgress(done, total, phase);
-        var rt = st.runtimeStatus;
-        if (rt === 'Completed' || cs.phase === 'done') {
-          clearInterval(_scanPoll); _scanPoll = null;
-          _setProgress(total || done, total || done, 'Deep scan complete');
-        } else if (rt === 'Failed' || rt === 'Terminated') {
-          clearInterval(_scanPoll); _scanPoll = null;
-          document.getElementById('scan-phase').textContent = 'Deep scan failed — check credentials / Sites.Read.All consent';
-        }
-      } catch (e) { /* transient — keep polling */ }
-    }, 3000);
-  } catch (e) {
-    document.getElementById('scan-phase').textContent = 'Could not start deep scan: ' + e;
-  }
+function _creds() {
+  return {
+    tenant_id: gel('inp-tenant').value.trim(),
+    client_id: gel('inp-client').value.trim(),
+    client_secret: gel('inp-secret').value.trim(),
+  };
 }
 
-async function connectLive() {
-  const t=document.getElementById('inp-tenant').value.trim();
-  const c=document.getElementById('inp-client').value.trim();
-  const s=document.getElementById('inp-secret').value.trim();
-  if(!t||!c||!s){alert('Please fill in all three credential fields.');return;}
-
-  const btn = event && event.target ? event.target : null;
-  const oldLabel = btn ? btn.textContent : '';
-  if(btn){ btn.disabled = true; btn.textContent = 'Connecting…'; }
-
-  try {
-    // usagemetrics: uses Microsoft Graph usage reports API
-    // (getSharePointSiteUsageStorage + getSharePointSiteUsageDetail +
-    //  subscribedSkus) — accurate org-wide totals in one fast call.
-    if(btn){ btn.textContent = 'Fetching org storage data from Microsoft Graph…'; }
-    const res = await fetch(`${FUNC_BASE}/usagemetrics`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenant_id: t, client_id: c, client_secret: s })
-    });
-    const data = await res.json();
-
-    if (data.status !== 'success') {
-      throw new Error(data.message || data.detail || 'Connection failed.');
-    }
-    if (!data.sites || !data.sites.length) {
-      throw new Error('Connected, but no SharePoint site data was returned. Ensure Reports.Read.All is admin-consented on the app registration.');
-    }
-
-    // The client agent returns RAW numbers; the cost/quota/savings come from
-    // our Intelligence API in data.intelligence. Merge its enriched summary +
-    // priced sites back over the raw payload so renderLive() sees the $ figures.
-    var intel = data.intelligence;
-    if (intel && intel.status === 'success') {
-      if (intel.summary) data.summary = Object.assign({}, data.summary, intel.summary);
-      if (intel.sites && intel.sites.length) data.sites = intel.sites;
-    } else if (intel && intel.status === 'error') {
-      throw new Error('Licence/intelligence error: ' + (intel.message || 'unauthorised') +
-        '\\n\\n(The cost figures come from the StorageIQ Intelligence service.)');
-    }
-
-    IS_LIVE_DATA = true;
-    LIVE = data;                 // full live payload for renderLive()
-    renderLive(data);
-    saveResult('usage', data);   // cache so next open is instant
-    _showSyncedBanner(new Date().toISOString());
-    document.getElementById('discovery-results')
-      .scrollIntoView({behavior:'smooth', block:'start'});
-
-  } catch (err) {
-    alert('Could not load live data:\n\n' + err.message +
-          '\n\nCheck the Tenant ID, Client ID and Secret, and that the ' +
-          'app has Reports.Read.All (admin-consented).');
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = oldLabel; }
-  }
-}
-
-let LIVE = null;
-
-/* Render the dashboard from live usagemetrics data.
-   org_used_gb comes from getSharePointSiteUsageStorage (authoritative).
-   org_quota_gb is derived from subscribedSkus licence counts.
-   Per-site rows come from getSharePointSiteUsageDetail. */
-function renderLive(data) {
-  // Defensive: never crash if the payload is partial (failed scan, licence
-  // error, or an older cache shape). Missing numbers fall back to 0.
+/* ── Render live scan output into the SAME tiles/table runDemo() uses ──── */
+function renderLiveDiscovery(data) {
   data = data || {};
-  const sm    = data.summary || {};
-  const SITES = data.sites || [];
+  const sm = data.summary || {};
+  const sites = data.sites || [];
 
-  document.getElementById('discovery-results').style.display = 'block';
-  document.getElementById('connect-instructions').style.display = 'none';
+  const poolGB = sm.org_quota_gb || (1024 + (sm.seat_count || 0) * 10);
+  const usedGB = (sm.org_used_gb != null && sm.org_used_gb > 0)
+    ? sm.org_used_gb : (sm.total_used_gb || 0);
+  const headroom = poolGB - usedGB;
 
-  // ── Org-level totals ─────────────────────────────────────────
-  // org_used_gb = getSharePointSiteUsageStorage "SharePoint" row (most recent).
-  // Fallback to total_used_gb (sum of detail rows) if the storage trend
-  // call failed or the org_ fields are absent.
-  const totalGB   = (sm.org_used_gb  != null && sm.org_used_gb  > 0)
-                      ? sm.org_used_gb  : (sm.total_used_gb || 0);
-  const quotaGB   = sm.org_quota_gb  ?? 0;
-  const unusedGB  = sm.org_unused_gb ?? 0;
-  const usedPct   = sm.org_used_pct  ?? 0;
-  const seatCount = sm.seat_count    ?? 0;
+  // No per-site version/cold breakdown from the fast path — estimate at the
+  // same 58% ratio the demo uses, same as the old dashboard's convention.
+  const archivGB = usedGB * 0.58 * 0.70;
 
-  // Estimate composition from active-file ratio.
-  // (Exact version/cold breakdown needs a deep-scan file walk;
-  // usagemetrics only reports file count vs active file count.)
-  const activeRatio = sm.total_files > 0
-    ? Math.min(0.45, sm.total_active_files / sm.total_files)
-    : 0.19;
-  const activeGB  = totalGB * activeRatio;
-  const coldGB    = totalGB * (1 - activeRatio) * 0.35;
-  const versionGB = totalGB * 0.45;     // industry avg for enterprise SP
-  const archGB    = versionGB * 0.70;   // archivable portion (est.)
-  const savingMo  = archGB * (SP_RATE - ADLS_COOL);
-  const annualSaving = savingMo * 12;
+  setT('d-pool', fmtTB(poolGB / 1024));
+  setT('d-used', fmtTB(usedGB / 1024));
+  setT('d-vers', fmtGB(archivGB));
 
-  // ── Executive summary tiles ───────────────────────────────────
-  setText('d-total', fmtGB(totalGB));
-  const quotaNote = quotaGB > 0
-    ? ` · ${usedPct}% of ${fmtGB(quotaGB)} org quota`
-    : '';
-  setText('d-total-sub',
-    comma(sm.site_count) + ' site collections · live data' + quotaNote);
-  setText('d-active',      fmtGB(activeGB));
-  setText('d-cold',        fmtGB(coldGB));
-  setText('d-vers',        fmtGB(archGB) + ' est.');
-  setText('d-savings-opp', fmtYr(annualSaving) + ' est.');
-
-  // ── Health score ──────────────────────────────────────────────
-  const overPct   = quotaGB > 0 ? Math.max(0, usedPct - 100) : 0;
-  const health    = Math.max(20, Math.round(
-    100 - (versionGB / totalGB) * 35 - (coldGB / totalGB) * 20 - overPct * 2
-  ));
-  const hBar  = document.getElementById('d-health-bar');
-  const hNum  = document.getElementById('d-health-score');
-  const hLabel= document.getElementById('d-health-label');
-  hNum.textContent = health + '/100';
-  hBar.style.width = health + '%';
-  if (health >= 80) {
-    hBar.style.background = 'var(--green)';
-    hNum.className = 'health-score-num c-green';
-    hLabel.textContent = 'Good';
-  } else if (health >= 60) {
-    hBar.style.background = 'var(--amber)';
-    hNum.className = 'health-score-num c-amber';
-    hLabel.textContent = 'Needs Attention';
+  const gE = gel('d-gap'), gT = gel('d-gap-tile');
+  if (headroom >= 0) {
+    gE.textContent = fmtGB(headroom) + ' free'; gE.className = 'tile-val c-green';
+    gT.style.setProperty('--tile-accent', 'var(--green)');
+    setT('d-gap-sub', 'Within free entitlement');
   } else {
-    hBar.style.background = 'var(--red)';
-    hNum.className = 'health-score-num c-red';
-    hLabel.textContent = 'Critical';
+    gE.textContent = fmtGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
+    gT.style.setProperty('--tile-accent', 'var(--red)');
+    setT('d-gap-sub', 'Overage billing active');
   }
 
-  // ── Storage composition bars ──────────────────────────────────
-  const pct = g => totalGB > 0 ? Math.min(100, Math.round(g / totalGB * 100)) : 0;
-  document.getElementById('composition-bars').innerHTML = `
-    ${bar('Active Files',          pct(activeGB),  'var(--green)',  fmtGB(activeGB)  + ' (' + pct(activeGB)  + '%)')}
-    ${bar('Historical Versions',   pct(versionGB), 'var(--amber)',  fmtGB(versionGB) + ' (' + pct(versionGB) + '%) est.')}
-    ${bar('Cold Files (>90 days)', pct(coldGB),    'var(--text3)',  fmtGB(coldGB)    + ' (' + pct(coldGB)    + '%) est.')}
-  `;
-  setText('version-anno',
-    `Real total: ${fmtGB(totalGB)} SharePoint storage used` +
-    (quotaGB > 0 ? ` out of ${fmtGB(quotaGB)} org quota (${usedPct}% used, ${fmtGB(unusedGB)} remaining).` : '.') +
-    ` ${comma(sm.total_files)} files across ${sm.site_count} sites` +
-    ` (${comma(sm.total_active_files)} active). Version/cold split is estimated — exact breakdown requires a deep file scan.`
-  );
+  const totalUsed = sites.reduce((a, s) => a + (s.used_gb || 0), 0) || usedGB;
+  const sorted = sites.slice().sort((a, b) => (b.used_gb || 0) - (a.used_gb || 0)).slice(0, 12);
+  gel('demo-tbody').innerHTML = sorted.map(s => {
+    const gb = s.used_gb || 0;
+    const p = totalUsed > 0 ? Math.round(gb / totalUsed * 100) : 0;
+    const a = Math.round(gb * 0.58 * 0.70);
+    const bw = Math.round(p * 0.9);
+    const dept = s.owner || '—';
+    return `<tr><td><div class="rn">${s.site_url || 'Site'}</div></td><td><span class="badge bt">${dept}</span></td><td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(gb)}</td><td class="c-dim">${p}%</td><td class="c-amber">est.</td><td class="c-green">${fmtGB(a)}</td><td><span class="badge bg">—</span></td></tr>`;
+  }).join('');
 
-  // ── Version bloat section (estimated from totals) ─────────────
-  setText('vb-files',   comma(sm.total_files) + ' files');
-  setText('vb-avg-ver', 'estimated — deep scan needed');
-  setText('vb-rec-ver', '5 versions');
-  setText('vb-excess',  'run deep scan for exact count');
-  setText('vb-storage', fmtGB(archGB) + ' est.');
-  setText('vb-recovery',fmtMo(savingMo) + ' est.');
+  const vGB = usedGB * 0.58;
+  gel('demo-bars').innerHTML =
+    bar('Total used', 100, 'var(--navy4)', fmtTB(usedGB / 1024)) +
+    bar('Version copies', 58, 'var(--amber)', fmtGB(Math.round(vGB))) +
+    bar('Recoverable', usedGB > 0 ? Math.round(archivGB / usedGB * 100) : 0, 'var(--green)', fmtGB(archivGB)) +
+    bar('Active content', usedGB > 0 ? Math.round((usedGB - archivGB) / usedGB * 100) : 0, 'var(--blue)', fmtGB(usedGB - archivGB));
 
-  // ── Top cost contributors — real per-site from usage report ───
-  document.getElementById('sites-tbody').innerHTML = SITES
-    .slice(0, 15).map(s => {
-      // site_url e.g. "https://tenant.sharepoint.com/sites/Finance"
-      const siteName = (s.site_url || '').split('/').filter(Boolean).pop()
-        || s.owner || 'Site';
-      const archEst    = s.used_gb * 0.45 * 0.70;
-      const annualSave = archEst * (SP_RATE - ADLS_COOL) * 12;
-      const risk = s.used_gb > 100
-        ? '<span class="badge br">High</span>'
-        : s.used_gb > 10
-          ? '<span class="badge ba">Medium</span>'
-          : '<span class="badge bg">Low</span>';
-      return `<tr>
-        <td><div class="row-name">${siteName}</div><div class="row-sub">${comma(s.file_count)} files · last active ${s.last_activity || '—'}</div></td>
-        <td><span class="badge bt">Live</span></td>
-        <td>${fmtGB(s.used_gb)}</td>
-        <td class="c-red">${fmtMo(s.monthly_cost_usd)}</td>
-        <td class="c-green">${fmtGB(archEst)} est.</td>
-        <td class="c-gold">${fmtYr(annualSave)} est.</td>
-        <td>${risk}</td>
-      </tr>`;
-    }).join('');
-
-  // ── AI recommendations from real site data ────────────────────
-  const recs = SITES.slice(0, 5).map(s => {
-    const siteName  = (s.site_url || '').split('/').filter(Boolean).pop()
-      || s.owner || 'Site';
-    const archEst   = s.used_gb * 0.45 * 0.70;
-    const save      = archEst * (SP_RATE - ADLS_COOL) * 12;
-    return {
-      priority: s.used_gb > 50 ? 'high' : 'medium',
-      icon:     s.used_gb > 50 ? '🔴' : '🟡',
-      title:    `${siteName} — ${fmtGB(s.used_gb)} used`,
-      desc:     `${comma(s.file_count)} total files, ${comma(s.active_file_count)} active. ` +
-                `Last activity: ${s.last_activity || 'Unknown'}. ` +
-                `Allocated quota: ${fmtGB(s.allocated_gb)}.`,
-      saving:   `Estimated recovery: ${fmtGB(archEst)} · ${fmtYr(save)} annual saving`,
-      badges:   ['Live data', 'Usage report'],
-    };
-  });
-  document.getElementById('ai-recommendations').innerHTML = recs.length
-    ? recs.map(r =>
-        `<div class="ai-rec">
-          <div class="ai-rec-icon ${r.priority}">${r.icon}</div>
-          <div class="ai-rec-body">
-            <div class="ai-rec-title">${r.title}</div>
-            <div class="ai-rec-desc">${r.desc}</div>
-            <div class="ai-rec-saving">${r.saving}</div>
-            <div class="ai-rec-meta">${r.badges.map(b => `<span class="badge bo">${b}</span>`).join('')}</div>
-          </div>
-        </div>`).join('')
-    : '<div class="callout green"><span class="callout-icon">◈</span><div class="callout-text">No sites found with significant storage usage.</div></div>';
-
-  // ── Site file-count chart (version data needs deep scan) ──────
-  const top = SITES.slice(0, 8);
-  renderVersionChart(
-    top.map(s => ((s.site_url || '').split('/').filter(Boolean).pop() || 'Site').slice(0, 10)),
-    top.map(s => s.file_count)
-  );
-  setText('version-anno',   // update after renderVersionChart overwrites it
-    `Top ${top.length} sites by file count (version history data requires a deep scan).`
-  );
-
-  // ── Licence / entitlement table ───────────────────────────────
-  if (seatCount > 0) {
-    setText('lic-sub',      `+10 GB per assigned licence · ${comma(seatCount)} E3/E5 seats`);
-    setText('lic-pool-vol', fmtGB(seatCount * 10));
-    setText('lic-total',    fmtGB(quotaGB));
-  } else {
-    setText('lic-sub',
-      sm.quota_source === 'unavailable'
-        ? 'Add Organization.Read.All permission for live licence count'
-        : 'Licence count unavailable');
-    setText('lic-pool-vol', '—');
-    setText('lic-total',    quotaGB > 0 ? fmtGB(quotaGB) : '—');
-  }
-
-  switchTab('discovery');
+  gel('demo-results').style.display = 'block';
+  setT('scan-lbl', 'LIVE SCAN');
 }
 
-/* ── Tab routing ────────────────────────────────────────────── */
-function switchTab(name) {
-  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('visible'));
-  document.querySelectorAll('.nav-tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
-  const section = document.getElementById('tab-'+name);
-  const btn = document.querySelector(`[data-tab="${name}"]`);
-  if(section) section.classList.add('visible');
-  if(btn){btn.classList.add('active');btn.setAttribute('aria-selected','true');}
-  if(['saving','calculator','executive','beforeafter'].includes(name)) calc();
-}
-
-document.querySelectorAll('.nav-tab').forEach(btn=>{
-  btn.addEventListener('click',()=>switchTab(btn.dataset.tab));
-});
-
-/* ── Wire sliders ───────────────────────────────────────────── */
-document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',calc));
-
-/* ── Cached last-scan result ────────────────────────────────────
-   On open, show the LAST saved scan instantly (no re-scan). A fresh
-   scan only runs when the user clicks Connect & Scan / Deep Scan,
-   whose results are then saved back to the tenant's own cache. */
+/* ── Cached last-scan result (instant on open; re-scan only on demand) ─── */
 function _timeAgo(iso) {
   try {
-    var secs = (Date.now() - new Date(iso).getTime()) / 1000;
+    const secs = (Date.now() - new Date(iso).getTime()) / 1000;
     if (secs < 60) return 'just now';
-    if (secs < 3600) return Math.floor(secs/60) + ' min ago';
-    if (secs < 86400) return Math.floor(secs/3600) + ' hr ago';
-    return Math.floor(secs/86400) + ' day(s) ago';
+    if (secs < 3600) return Math.floor(secs / 60) + ' min ago';
+    if (secs < 86400) return Math.floor(secs / 3600) + ' hr ago';
+    return Math.floor(secs / 86400) + ' day(s) ago';
   } catch (e) { return ''; }
 }
 function _showSyncedBanner(iso) {
-  var el = document.getElementById('synced-banner');
+  let el = gel('synced-banner');
   if (!el) {
     el = document.createElement('div');
     el.id = 'synced-banner';
-    el.style.cssText = 'position:fixed;top:8px;right:12px;z-index:9999;background:var(--bg3);border:1px solid var(--border-hi);border-radius:6px;padding:6px 12px;font-family:var(--mono);font-size:11px;color:var(--text3)';
+    el.style.cssText = 'position:fixed;top:8px;right:12px;z-index:9999;background:var(--navy3,#151b2e);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--white3,#9aa4c0)';
     document.body.appendChild(el);
   }
-  el.textContent = 'Last synced: ' + _timeAgo(iso) + '  ·  click Connect & Scan to refresh';
+  el.textContent = 'Last synced: ' + _timeAgo(iso) + '  ·  Connect & Scan to refresh';
 }
 async function saveResult(kind, data) {
   try {
@@ -2167,24 +971,134 @@ async function saveResult(kind, data) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kind: kind, data: data })
     });
-  } catch (e) { /* cache is best-effort */ }
+  } catch (e) { /* best-effort cache */ }
 }
 async function loadCachedResult() {
   try {
-    var r = await fetch(FUNC_BASE + '/lastresult');
-    var j = await r.json();
+    const r = await fetch(FUNC_BASE + '/lastresult');
+    const j = await r.json();
     if (j && j.cached && j.record && j.record.data) {
-      var data = j.record.data;
-      IS_LIVE_DATA = true; LIVE = data;
-      renderLive(data);
+      switchTab('discovery');
+      renderLiveDiscovery(j.record.data);
       _showSyncedBanner(j.record.saved_utc);
-      var res = document.getElementById('discovery-results');
-      if (res) res.style.display = 'block';
     }
-  } catch (e) { /* no cache — leave the default hero/scan prompt */ }
+  } catch (e) { /* no cache yet — leave the hero/demo prompt */ }
 }
 
-/* ── Init ───────────────────────────────────────────────────── */
+/* ── Fast connect (usagemetrics, ~6s) — the default path ───────────────── */
+async function connectLive() {
+  const { tenant_id: t, client_id: c, client_secret: s } = _creds();
+  if (!t || !c || !s) { alert('Please fill in all three credential fields.'); return; }
+
+  const btn = event && event.target ? event.target : null;
+  const oldLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+
+  try {
+    const res = await fetch(`${FUNC_BASE}/usagemetrics`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: t, client_id: c, client_secret: s })
+    });
+    const data = await res.json();
+    if (data.status !== 'success') {
+      throw new Error(data.message || data.detail || 'Connection failed.');
+    }
+    if (!data.sites || !data.sites.length) {
+      throw new Error('Connected, but no SharePoint site data was returned. Ensure Reports.Read.All is admin-consented on the app registration.');
+    }
+
+    // Raw numbers come back from the agent; the Intelligence API (our server)
+    // supplies the quota/pricing/savings figures — merge them in.
+    const intel = data.intelligence;
+    if (intel && intel.status === 'success') {
+      if (intel.summary) data.summary = Object.assign({}, data.summary, intel.summary);
+      if (intel.sites && intel.sites.length) data.sites = intel.sites;
+    } else if (intel && intel.status === 'error') {
+      throw new Error('Licence/intelligence error: ' + (intel.message || 'unauthorised'));
+    }
+
+    switchTab('discovery');
+    renderLiveDiscovery(data);
+    saveResult('usage', data);
+    _showSyncedBanner(new Date().toISOString());
+    gel('demo-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    alert('Could not load live data:\n\n' + err.message +
+          '\n\nCheck the Tenant ID, Client ID and Secret, and that the ' +
+          'app has Reports.Read.All (admin-consented).');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
+  }
+}
+
+/* ── Deep scan (Durable background job — exact version counts) ─────────── */
+var _scanPoll = null;
+function _setDeepProgress(done, total, phase) {
+  const el = gel('deep-scan-progress');
+  if (el) el.style.display = 'block';
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  setT('deep-scan-phase', phase || 'Scanning…');
+  setT('deep-scan-count', done + ' / ' + total + ' sites');
+  const bar = gel('deep-scan-bar');
+  if (bar) bar.style.width = pct + '%';
+  setT('deep-scan-pct', pct + '%');
+}
+async function startDeepScan() {
+  const { tenant_id: t, client_id: c, client_secret: s } = _creds();
+  if (!t || !c || !s) { alert('Please fill in all three credential fields.'); return; }
+  if (!confirm('Deep scan reads every file version across the tenant. On a large tenant this can take from minutes to a few hours. Continue?')) return;
+
+  _setDeepProgress(0, 0, 'Starting deep scan…');
+  try {
+    const startResp = await fetch(FUNC_BASE + '/startscan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: t, client_id: c, client_secret: s })
+    });
+    const start = await startResp.json();
+    const statusUrl = start.statusQueryGetUri || (FUNC_BASE + '/scanstatus?id=' + start.id);
+
+    if (_scanPoll) clearInterval(_scanPoll);
+    _scanPoll = setInterval(async () => {
+      try {
+        const r = await fetch(statusUrl);
+        const st = await r.json();
+        const cs = st.customStatus || {};
+        const done = cs.sites_done || 0, total = cs.sites_total || 0;
+        const phase = (cs.phase === 'done') ? 'Deep scan complete'
+          : (cs.phase === 'computing') ? 'Computing savings…'
+          : (total ? 'Scanning tenant…' : 'Enumerating sites…');
+        _setDeepProgress(done, total, phase);
+
+        if (st.runtimeStatus === 'Completed' || cs.phase === 'done') {
+          clearInterval(_scanPoll); _scanPoll = null;
+          _setDeepProgress(total || done, total || done, 'Deep scan complete');
+        } else if (st.runtimeStatus === 'Failed' || st.runtimeStatus === 'Terminated') {
+          clearInterval(_scanPoll); _scanPoll = null;
+          setT('deep-scan-phase', 'Deep scan failed — check credentials / Sites.Read.All consent');
+        }
+      } catch (e) { /* transient — keep polling */ }
+    }, 3000);
+  } catch (e) {
+    setT('deep-scan-phase', 'Could not start deep scan: ' + e);
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('visible'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  const sec=gel('tab-'+name), btn=document.querySelector('[data-tab="'+name+'"]');
+  if(sec) sec.classList.add('visible');
+  if(btn) btn.classList.add('active');
+}
+
+const dEl=gel('nav-date');
+if(dEl) dEl.textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+Chart.defaults.color='#4E5A7A';
+Chart.defaults.font.family="'Inter', sans-serif";
+Chart.defaults.font.size=10;
+
 calc();
 loadCachedResult();
 </script>
