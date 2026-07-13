@@ -595,13 +595,12 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
 <script>
 'use strict';
 const fmtTB = n => n>=1 ? Math.round(n)+' TB' : Math.round(n*1024)+' GB';
-// Exact (1-decimal) TB/GB formatter for LIVE scan data, where rounding a
-// figure like 1.2 TB down to "1 TB" would hide real usage from the user.
-const fmtExact = n => {
-  if (n >= 1) return (Math.round(n * 10) / 10) + ' TB';
-  const gb = n * 1024;
-  return (gb >= 10 ? Math.round(gb) : Math.round(gb * 10) / 10) + ' GB';
-};
+// Exact TB/GB formatter for LIVE scan data — always 1-decimal precision,
+// GB only, never MB (rounding 1.24 TB down to "1 TB" hides real usage).
+// n is in TB.
+const fmtExact = n => (Math.round(n * 100) / 100).toFixed(2) + ' TB';
+// Same, but the input is already in GB (used for per-site rows etc.).
+const fmtExactGB = gb => fmtExact(gb / 1024);
 const fmtGB = n => n>=1024 ? (n/1024).toFixed(1)+' TB' : Math.round(n)+' GB';
 const fmtC = (n,d=0) => {
   if(n===0) return '$0';
@@ -917,15 +916,15 @@ function renderLiveDiscovery(data) {
 
   setT('d-pool', fmtExact(poolGB / 1024));
   setT('d-used', fmtExact(usedGB / 1024));
-  setT('d-vers', fmtGB(archivGB));
+  setT('d-vers', fmtExactGB(archivGB));
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
   if (headroom >= 0) {
-    gE.textContent = fmtGB(headroom) + ' free'; gE.className = 'tile-val c-green';
+    gE.textContent = fmtExactGB(headroom) + ' free'; gE.className = 'tile-val c-green';
     gT.style.setProperty('--tile-accent', 'var(--green)');
     setT('d-gap-sub', 'Within free entitlement');
   } else {
-    gE.textContent = fmtGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
+    gE.textContent = fmtExactGB(Math.abs(headroom)) + ' over'; gE.className = 'tile-val c-red';
     gT.style.setProperty('--tile-accent', 'var(--red)');
     setT('d-gap-sub', 'Overage billing active');
   }
