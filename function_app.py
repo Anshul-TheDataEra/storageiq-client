@@ -545,17 +545,23 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
         # Raw licensed-seat count only — NO quota formula here. The Intelligence
         # API turns seat_count into the storage quota (that formula is the USP).
         #
-        # Microsoft's "1 TB + 10 GB/seat" pool bonus applies to any seat that
-        # includes SharePoint/OneDrive (Office 365 / Microsoft 365 plans), not
-        # just the enterprise E3/E5 SKUs. Match by prefix instead of an exact
-        # small set, so Business Basic/Standard/Premium, F1/F3, A1/A3/A5,
-        # frontline and legacy Office 365 plans all count too.
-        POOL_SKU_PREFIXES = (
+        # Microsoft's "1 TB + 10 GB/seat" pool bonus applies to primary seats
+        # that include SharePoint/OneDrive (Business/Enterprise/Education M365
+        # plans), NOT to standalone add-ons like Power BI, Teams Premium,
+        # Stream, Flow, Visio, or Copilot trials — those are separate SKUs
+        # consumed alongside a primary seat, not additional pool-qualifying
+        # seats. Real tenant data also shows skuPartNumber values with stray
+        # spaces (e.g. "MICROSOFT_365_ BUSINESS_ PREMIUM_(NO TEAMS)"), so we
+        # strip whitespace before matching rather than relying on exact
+        # prefixes.
+        POOL_SKU_SUBSTRINGS = (
             "ENTERPRISEPACK", "ENTERPRISEPREMIUM", "ENTERPRISEWITHSCAL",
-            "SPE_E", "SPB",            # SPE_E3/E5, Microsoft 365 Business std/prem
-            "O365_BUSINESS", "SMB_BUSINESS",
+            "SPE_E",                       # SPE_E3 / SPE_E5
+            "SPB",                         # Microsoft 365 Business Standard/Premium
+            "MICROSOFT365BUSINESSPREMIUM", "MICROSOFT365BUSINESSSTANDARD",
+            "O365_BUSINESS", "O365BUSINESS", "SMB_BUSINESS",
             "STANDARDPACK", "STANDARDWOFFPACK",  # Office 365 E1 / legacy
-            "DESKLESSPACK",            # F1/F3 frontline
+            "DESKLESSPACK",                # F1/F3 frontline
             "M365EDU_A", "ENTERPRISEPACK_FACULTY", "ENTERPRISEPACK_STUDENT",
         )
         seat_count = 0
@@ -566,10 +572,12 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                                      headers=req_headers)
             if skus_resp.status_code == 200:
                 for sku in skus_resp.json().get("value", []):
-                    part = (sku.get("skuPartNumber") or "").upper()
+                    raw_part = sku.get("skuPartNumber") or ""
+                    part = raw_part.upper()
+                    norm = "".join(part.split())  # strip all whitespace
                     consumed = sku.get("consumedUnits", 0)
-                    sku_debug.append({"sku": part, "consumed": consumed})
-                    if any(part.startswith(p) for p in POOL_SKU_PREFIXES):
+                    sku_debug.append({"sku": raw_part, "consumed": consumed})
+                    if any(p in norm for p in POOL_SKU_SUBSTRINGS):
                         seat_count += consumed
             else:
                 seat_source = "unavailable"
