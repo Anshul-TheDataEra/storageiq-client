@@ -1,0 +1,12 @@
+local.settings.json
+.venv/
+.python_packages/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.vscode/
+__azurite_db*__.json
+__blobstorage__/
+__queuestorage__/
+*.md
