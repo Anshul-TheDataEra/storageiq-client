@@ -1732,19 +1732,21 @@ if(dEl) dEl.textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',mon
    The .tip-box is centred on its .tip-wrap by default (left:50%). When the
    icon sits near the left/right edge of a tile row, that centred box runs
    off-screen or overlaps neighbouring tiles. On hover, measure the box and
-   flip to a left- or right-anchored position if it would overflow. ────── */
-document.querySelectorAll('.tip-wrap').forEach(wrap => {
-  wrap.addEventListener('mouseenter', () => {
-    const box = wrap.querySelector('.tip-box');
-    if (!box) return;
-    box.classList.remove('tip-clamp-left', 'tip-clamp-right');
-    // .tip-box is normally shown via the CSS :hover rule, which hasn't
-    // necessarily applied yet on this exact event tick — force it visible
-    // so getBoundingClientRect() returns real (non-zero) coordinates.
-    const prevDisplay = box.style.display;
-    box.style.display = 'block';
+   flip to a left- or right-anchored position if it would overflow.
+
+   Uses event delegation on document (mouseover, which bubbles — mouseenter
+   does not) instead of per-element listeners, so it works regardless of
+   which tab is active when the page loads or how the tab content was
+   inserted, and needs no re-binding when tabs are switched. ────────────── */
+document.addEventListener('mouseover', (e) => {
+  const wrap = e.target.closest('.tip-wrap');
+  if (!wrap) return;
+  const box = wrap.querySelector('.tip-box');
+  if (!box) return;
+  box.classList.remove('tip-clamp-left', 'tip-clamp-right');
+  requestAnimationFrame(() => {
     const r = box.getBoundingClientRect();
-    box.style.display = prevDisplay;
+    if (r.width === 0) return; // not actually visible (shouldn't happen, but be safe)
     const margin = 12;
     if (r.left < margin) {
       box.classList.add('tip-clamp-left');
