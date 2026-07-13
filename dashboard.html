@@ -1912,6 +1912,18 @@ async function connectLive() {
       throw new Error('Connected, but no SharePoint site data was returned. Ensure Reports.Read.All is admin-consented on the app registration.');
     }
 
+    // The client agent returns RAW numbers; the cost/quota/savings come from
+    // our Intelligence API in data.intelligence. Merge its enriched summary +
+    // priced sites back over the raw payload so renderLive() sees the $ figures.
+    var intel = data.intelligence;
+    if (intel && intel.status === 'success') {
+      if (intel.summary) data.summary = Object.assign({}, data.summary, intel.summary);
+      if (intel.sites && intel.sites.length) data.sites = intel.sites;
+    } else if (intel && intel.status === 'error') {
+      throw new Error('Licence/intelligence error: ' + (intel.message || 'unauthorised') +
+        '\\n\\n(The cost figures come from the StorageIQ Intelligence service.)');
+    }
+
     IS_LIVE_DATA = true;
     LIVE = data;                 // full live payload for renderLive()
     renderLive(data);

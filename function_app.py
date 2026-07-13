@@ -374,7 +374,10 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                         "credentials.", "detail": str(e)}),
             mimetype="application/json", status_code=401, headers=cors)
 
-    SP_RATE = 0.20  # $/GB/mo
+    # NOTE: No pricing / savings / quota formulas here. This agent only
+    # gathers RAW numbers (bytes, file/version counts, seat counts) from the
+    # tenant. All cost/quota/savings maths (the USP) lives in the Intelligence
+    # API on our server. The client environment holds no such logic.
 
     try:
         url = (f"{GRAPH}/reports/"
@@ -418,7 +421,7 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                 "allocated_gb": round(allocated / (1024 ** 3), 2),
                 "file_count": file_count, "active_file_count": active_files,
                 "last_activity": col("Last Activity Date"),
-                "monthly_cost_usd": round(used_gb * SP_RATE, 2),
+                # No cost here — the Intelligence API computes $ figures.
             })
 
         sites.sort(key=lambda s: s["used_bytes"], reverse=True)
@@ -445,9 +448,11 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             org_sp_used_bytes = total_bytes
         org_sp_used_gb = org_sp_used_bytes / (1024 ** 3)
 
+        # Raw licensed-seat count only — NO quota formula here. The Intelligence
+        # API turns seat_count into the storage quota (that formula is the USP).
         POOL_SKUS = {"ENTERPRISEPACK", "ENTERPRISEPREMIUM", "SPE_E3", "SPE_E5"}
         seat_count = 0
-        quota_source = "formula"
+        seat_source = "skus"
         try:
             skus_resp = requests.get(f"{GRAPH}/subscribedSkus",
                                      headers=req_headers)
@@ -456,33 +461,45 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                     if sku.get("skuPartNumber") in POOL_SKUS:
                         seat_count += sku.get("consumedUnits", 0)
             else:
-                quota_source = "unavailable"
+                seat_source = "unavailable"
         except Exception:
-            quota_source = "unavailable"
+            seat_source = "unavailable"
 
-        org_quota_gb = 1024 + seat_count * 10
-        org_unused_gb = max(0.0, org_quota_gb - org_sp_used_gb)
-        org_used_pct = (round(org_sp_used_gb / org_quota_gb * 100, 1)
-                        if org_quota_gb > 0 else 0.0)
-
-        summary = {
+        # RAW measurements only. No $, no quota, no rates.
+        raw_summary = {
             "period": period, "site_count": len(sites),
             "org_used_gb": round(org_sp_used_gb, 2),
-            "org_quota_gb": round(org_quota_gb, 2),
-            "org_unused_gb": round(org_unused_gb, 2),
-            "org_used_pct": org_used_pct, "seat_count": seat_count,
-            "quota_source": quota_source,
+            "org_used_bytes": org_sp_used_bytes,
+            "seat_count": seat_count, "seat_source": seat_source,
             "total_used_gb": round(total_gb, 2),
-            "total_used_tb": round(total_gb / 1024, 3),
+            "total_used_bytes": total_bytes,
             "total_files": total_files,
             "total_active_files": total_active_files,
-            "total_monthly_cost_usd": round(org_sp_used_gb * SP_RATE, 2),
-            "total_yearly_cost_usd": round(org_sp_used_gb * SP_RATE * 12, 2),
-            "sp_rate_per_gb_month": SP_RATE,
         }
+
+        # Send the raw numbers to OUR Intelligence API for the cost/quota/savings
+        # (the USP). If it is unreachable, still return the raw data so the
+        # agent degrades gracefully — but the valuable figures come from us.
+        intelligence = None
+        try:
+            ir = requests.post(INTELLIGENCE_API_URL, json={
+                "licence_key": LICENCE_KEY,
+                "mode": "usage",
+                "summary": raw_summary,
+                "sites": sites,
+            }, timeout=60)
+            if ir.status_code == 200:
+                intelligence = ir.json()
+            else:
+                intelligence = {"status": "error", "http": ir.status_code,
+                                "message": ir.text[:300]}
+        except Exception as e:
+            intelligence = {"status": "error", "message": str(e)}
+
         return func.HttpResponse(
-            json.dumps({"status": "success", "summary": summary,
-                        "sites": sites}, indent=2),
+            json.dumps({"status": "success", "summary": raw_summary,
+                        "sites": sites, "intelligence": intelligence},
+                       indent=2),
             mimetype="application/json", status_code=200, headers=cors)
 
     except requests.HTTPError as e:
