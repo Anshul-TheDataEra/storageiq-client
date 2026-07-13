@@ -595,6 +595,13 @@ footer{border-top:1px solid rgba(255,255,255,0.05);padding:28px 48px;display:fle
 <script>
 'use strict';
 const fmtTB = n => n>=1 ? Math.round(n)+' TB' : Math.round(n*1024)+' GB';
+// Exact (1-decimal) TB/GB formatter for LIVE scan data, where rounding a
+// figure like 1.2 TB down to "1 TB" would hide real usage from the user.
+const fmtExact = n => {
+  if (n >= 1) return (Math.round(n * 10) / 10) + ' TB';
+  const gb = n * 1024;
+  return (gb >= 10 ? Math.round(gb) : Math.round(gb * 10) / 10) + ' GB';
+};
 const fmtGB = n => n>=1024 ? (n/1024).toFixed(1)+' TB' : Math.round(n)+' GB';
 const fmtC = (n,d=0) => {
   if(n===0) return '$0';
@@ -908,8 +915,8 @@ function renderLiveDiscovery(data) {
   // same 58% ratio the demo uses, same as the old dashboard's convention.
   const archivGB = usedGB * 0.58 * 0.70;
 
-  setT('d-pool', fmtTB(poolGB / 1024));
-  setT('d-used', fmtTB(usedGB / 1024));
+  setT('d-pool', fmtExact(poolGB / 1024));
+  setT('d-used', fmtExact(usedGB / 1024));
   setT('d-vers', fmtGB(archivGB));
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
