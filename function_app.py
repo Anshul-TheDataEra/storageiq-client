@@ -514,3 +514,87 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             json.dumps({"status": "error", "message": str(e)}),
             mimetype="application/json", status_code=500, headers=cors)
+
+
+# ===========================================================================
+# RESULT CACHE — store the last scan result so the dashboard shows it
+# instantly on open (no re-scan). A new scan only runs when the user hits
+# "Sync Now". Cached in this tenant's own storage (AzureWebJobsStorage blob).
+# ===========================================================================
+_CACHE_CONTAINER = "storageiq-cache"
+_CACHE_BLOB = "last-result.json"
+
+
+def _cache_client():
+    from azure.storage.blob import BlobServiceClient
+    conn = os.environ.get("AzureWebJobsStorage")
+    if not conn:
+        return None
+    svc = BlobServiceClient.from_connection_string(conn)
+    try:
+        svc.create_container(_CACHE_CONTAINER)
+    except Exception:
+        pass  # already exists
+    return svc.get_blob_client(_CACHE_CONTAINER, _CACHE_BLOB)
+
+
+@app.route(route="saveresult", methods=["POST", "OPTIONS"])
+def saveresult(req: func.HttpRequest) -> func.HttpResponse:
+    cors = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=cors)
+    try:
+        body = req.get_json()
+    except ValueError:
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": "Invalid JSON"}),
+            status_code=400, mimetype="application/json", headers=cors)
+
+    record = {
+        "saved_utc": datetime.datetime.now(
+            datetime.timezone.utc).isoformat(),
+        "kind": body.get("kind", "usage"),   # "usage" (fast) or "deep"
+        "data": body.get("data", {}),
+    }
+    try:
+        bc = _cache_client()
+        if bc is None:
+            raise RuntimeError("No storage connection configured")
+        bc.upload_blob(json.dumps(record), overwrite=True)
+        return func.HttpResponse(
+            json.dumps({"status": "success", "saved_utc": record["saved_utc"]}),
+            mimetype="application/json", headers=cors)
+    except Exception as e:
+        logging.exception("saveresult failed")
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": str(e)}),
+            status_code=500, mimetype="application/json", headers=cors)
+
+
+@app.route(route="lastresult", methods=["GET", "OPTIONS"])
+def lastresult(req: func.HttpRequest) -> func.HttpResponse:
+    cors = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=cors)
+    try:
+        bc = _cache_client()
+        if bc is None:
+            raise RuntimeError("No storage connection configured")
+        stream = bc.download_blob()
+        record = json.loads(stream.readall())
+        return func.HttpResponse(
+            json.dumps({"status": "success", "cached": True, "record": record}),
+            mimetype="application/json", headers=cors)
+    except Exception:
+        # No cache yet (first run) — tell the dashboard to show the scan prompt.
+        return func.HttpResponse(
+            json.dumps({"status": "success", "cached": False, "record": None}),
+            mimetype="application/json", headers=cors)

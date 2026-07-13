@@ -1927,6 +1927,8 @@ async function connectLive() {
     IS_LIVE_DATA = true;
     LIVE = data;                 // full live payload for renderLive()
     renderLive(data);
+    saveResult('usage', data);   // cache so next open is instant
+    _showSyncedBanner(new Date().toISOString());
     document.getElementById('discovery-results')
       .scrollIntoView({behavior:'smooth', block:'start'});
 
@@ -2133,8 +2135,55 @@ document.querySelectorAll('.nav-tab').forEach(btn=>{
 /* ── Wire sliders ───────────────────────────────────────────── */
 document.querySelectorAll('input[type=range]').forEach(el=>el.addEventListener('input',calc));
 
+/* ── Cached last-scan result ────────────────────────────────────
+   On open, show the LAST saved scan instantly (no re-scan). A fresh
+   scan only runs when the user clicks Connect & Scan / Deep Scan,
+   whose results are then saved back to the tenant's own cache. */
+function _timeAgo(iso) {
+  try {
+    var secs = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (secs < 60) return 'just now';
+    if (secs < 3600) return Math.floor(secs/60) + ' min ago';
+    if (secs < 86400) return Math.floor(secs/3600) + ' hr ago';
+    return Math.floor(secs/86400) + ' day(s) ago';
+  } catch (e) { return ''; }
+}
+function _showSyncedBanner(iso) {
+  var el = document.getElementById('synced-banner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'synced-banner';
+    el.style.cssText = 'position:fixed;top:8px;right:12px;z-index:9999;background:var(--bg3);border:1px solid var(--border-hi);border-radius:6px;padding:6px 12px;font-family:var(--mono);font-size:11px;color:var(--text3)';
+    document.body.appendChild(el);
+  }
+  el.textContent = 'Last synced: ' + _timeAgo(iso) + '  ·  click Connect & Scan to refresh';
+}
+async function saveResult(kind, data) {
+  try {
+    await fetch(FUNC_BASE + '/saveresult', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: kind, data: data })
+    });
+  } catch (e) { /* cache is best-effort */ }
+}
+async function loadCachedResult() {
+  try {
+    var r = await fetch(FUNC_BASE + '/lastresult');
+    var j = await r.json();
+    if (j && j.cached && j.record && j.record.data) {
+      var data = j.record.data;
+      IS_LIVE_DATA = true; LIVE = data;
+      renderLive(data);
+      _showSyncedBanner(j.record.saved_utc);
+      var res = document.getElementById('discovery-results');
+      if (res) res.style.display = 'block';
+    }
+  } catch (e) { /* no cache — leave the default hero/scan prompt */ }
+}
+
 /* ── Init ───────────────────────────────────────────────────── */
 calc();
+loadCachedResult();
 </script>
 </body>
 </html>
