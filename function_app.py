@@ -483,6 +483,8 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
 
         sites = []
         total_bytes = total_files = total_active_files = 0
+        deleted_bytes = 0
+        deleted_count = 0
         for row in reader:
             def col(*names, default=""):
                 for n in names:
@@ -494,6 +496,16 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             file_count = int(col("File Count", default="0") or 0)
             active_files = int(col("Active File Count", default="0") or 0)
             allocated = int(col("Storage Allocated (Byte)", default="0") or 0)
+
+            # Deleted (but not yet purged) sites still appear in this report
+            # and still consume tenant quota, but the Admin Centre's headline
+            # figure excludes them — so counting them here inflates the total
+            # (measured ~4 TB / 703 sites on a real tenant). Track them
+            # separately instead of silently folding them into the total.
+            if (col("Is Deleted", default="False") or "").strip().lower() == "true":
+                deleted_bytes += used_bytes
+                deleted_count += 1
+                continue
 
             total_bytes += used_bytes
             total_files += file_count
@@ -521,7 +533,22 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
         sites.sort(key=lambda s: s["used_bytes"], reverse=True)
         total_gb = total_bytes / (1024 ** 3)
 
+        # NOTE: getSharePointSiteUsageStorage's "Site Type" column has been
+        # observed to only ever contain "All" (SharePoint + OneDrive combined)
+        # in real tenant data — never a literal "SharePoint" value, despite
+        # what the report name implies. The original filter for "sharepoint"
+        # therefore never matched anything, silently falling through to the
+        # per-site detail-report sum (which run ~2-5% higher, since it can
+        # double-count or include items the org-level trend report excludes).
+        # Accept "all" as the primary case, "sharepoint" as a fallback in
+        # case a tenant/locale ever does return a dedicated SharePoint-only
+        # row.
+        # This report returns one row PER DAY across the whole period, so the
+        # rows must be picked by latest Report Date — taking the max value
+        # instead reports the tenant's 30-day peak, not its current usage
+        # (measured ~1 TB high on a real tenant whose usage had just dipped).
         org_sp_used_bytes = 0
+        report_date = ""
         try:
             storage_url = (f"{GRAPH}/reports/"
                            f"getSharePointSiteUsageStorage(period='{period}')")
@@ -529,12 +556,18 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             sresp.raise_for_status()
             sreader = csv.DictReader(
                 io.StringIO(sresp.content.decode("utf-8-sig")))
+            latest_all = ("", 0)          # (report_date, bytes)
+            latest_sharepoint = ("", 0)
             for srow in sreader:
-                if (srow.get("Site Type") or "").strip().lower() != "sharepoint":
-                    continue
+                site_type = (srow.get("Site Type") or "").strip().lower()
                 used = int(srow.get("Storage Used (Byte)") or 0)
-                if used > org_sp_used_bytes:
-                    org_sp_used_bytes = used
+                rdate = (srow.get("Report Date") or "").strip()
+                if site_type == "sharepoint" and rdate > latest_sharepoint[0]:
+                    latest_sharepoint = (rdate, used)
+                elif site_type == "all" and rdate > latest_all[0]:
+                    latest_all = (rdate, used)
+            picked = latest_sharepoint if latest_sharepoint[1] else latest_all
+            report_date, org_sp_used_bytes = picked
         except Exception as e:
             logging.warning("storage report failed (%s); using per-site sum", e)
             org_sp_used_bytes = total_bytes
@@ -565,9 +598,17 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             "O365BUSINESS", "SMBBUSINESS",
             "STANDARDPACK", "STANDARDWOFFPACK",  # Office 365 E1 / legacy
             "DESKLESSPACK",                # F1/F3 frontline
+            "PROJECTPROFESSIONAL",         # Project Plan 3 — carries a SP seat
             "M365EDUA", "ENTERPRISEPACKFACULTY", "ENTERPRISEPACKSTUDENT",
         )
+        # Purchased extra-storage add-ons are NOT seats: each unit is 1 GB of
+        # pool storage bought outright, on top of the licence-derived pool.
+        # Tenants near their limit often have tens of TB of this (validated
+        # against a real tenant: 28,672 units = 28 TB, which was the single
+        # largest source of our quota under-reporting).
+        STORAGE_ADDON_SUBSTRINGS = ("SHAREPOINTSTORAGE", "EXTRAFILESTORAGE")
         seat_count = 0
+        storage_addon_gb = 0
         seat_source = "skus"
         sku_debug = []
         try:
@@ -593,7 +634,9 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
                     enabled = prepaid.get("enabled", consumed)
                     sku_debug.append({"sku": raw_part, "consumed": consumed,
                                       "enabled": enabled})
-                    if any(p in norm for p in POOL_SKU_SUBSTRINGS):
+                    if any(p in norm for p in STORAGE_ADDON_SUBSTRINGS):
+                        storage_addon_gb += enabled
+                    elif any(p in norm for p in POOL_SKU_SUBSTRINGS):
                         seat_count += enabled
             else:
                 seat_source = "unavailable"
@@ -605,12 +648,16 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
             "period": period, "site_count": len(sites),
             "org_used_gb": round(org_sp_used_gb, 2),
             "org_used_bytes": org_sp_used_bytes,
+            "report_date": report_date,
             "seat_count": seat_count, "seat_source": seat_source,
+            "storage_addon_gb": storage_addon_gb,
             "sku_debug": sku_debug,
             "total_used_gb": round(total_gb, 2),
             "total_used_bytes": total_bytes,
             "total_files": total_files,
             "total_active_files": total_active_files,
+            "deleted_site_count": deleted_count,
+            "deleted_gb": round(deleted_bytes / (1024 ** 3), 2),
         }
 
         # Send the raw numbers to OUR Intelligence API for the cost/quota/savings

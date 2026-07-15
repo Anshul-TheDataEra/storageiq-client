@@ -103,6 +103,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.94);backdrop-fi
 .dt tbody tr:last-child td{border-bottom:none}
 .dt tbody tr:hover td{background:rgba(255,255,255,0.015)}
 .rn{color:var(--white);font-weight:500}.rs{font-size:11px;color:var(--white3);margin-top:2px}
+a.site-link{display:block;text-decoration:none;cursor:pointer;transition:color .15s}
+a.site-link:hover{color:var(--gold);text-decoration:underline}
+a.site-link::after{content:'↗';font-size:9px;margin-left:5px;opacity:.5}
 .tr-total td{background:var(--navy3)!important;border-top:1px solid rgba(255,255,255,0.1)!important;border-bottom:1px solid rgba(255,255,255,0.1)!important}
 .tr-hi td{background:rgba(52,196,122,0.05)}
 .tr-alert td{background:rgba(224,82,82,0.05)}
@@ -872,6 +875,13 @@ const SLIDERS = [
 function gel(id){return document.getElementById(id)}
 function setT(id,v){const e=gel(id);if(e)e.textContent=v}
 function getV(id){const e=gel(id);return e?+e.value:0}
+// Escape tenant-supplied strings (site URLs, owner names) before they go
+// into innerHTML — these come from the customer's own Graph data, not from us.
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 function syncSliders(fromTab) {
   SLIDERS.forEach(([a,b,la,lb,fmt]) => {
@@ -1410,7 +1420,7 @@ var FUNC_BASE = (function () {
     var q = new URLSearchParams(window.location.search).get('scan');
     if (q) return q.replace(/\/$/, '');
   } catch (e) {}
-  return 'https://storageiq-scan-aays.azurewebsites.net/api';
+  return 'https://storageiq-durable-scan.azurewebsites.net/api';
 })();
 
 function _creds() {
@@ -1452,9 +1462,18 @@ function renderLiveDiscovery(data) {
   setT('d-pool', fmtExact(poolTB));
   setT('d-used', fmtExact(total / 1024));
   setT('d-vers', fmtGB(archiv));
-  setT('d-pool-sub', (sm.seat_count || 0) > 0
-    ? comma(sm.seat_count) + ' licences detected — estimated, may differ slightly from M365 Admin Centre'
-    : '1 TB + 10 GB × licences — 0 qualifying licences detected, check Organization.Read.All consent');
+  // Break the pool into its two real components. Tenants near their cap
+  // usually have purchased extra storage on top of the licence-derived pool,
+  // and that add-on is a live cost they're already paying — worth naming.
+  const addonGB = sm.storage_addon_gb || 0;
+  const licencePoolGB = sm.licence_pool_gb || (poolGB - addonGB);
+  if ((sm.seat_count || 0) > 0) {
+    let sub = comma(sm.seat_count) + ' licences → ' + fmtExactGB(licencePoolGB);
+    if (addonGB > 0) sub += '  +  ' + fmtExactGB(addonGB) + ' purchased add-on';
+    setT('d-pool-sub', sub);
+  } else {
+    setT('d-pool-sub', '1 TB + 10 GB × licences — 0 qualifying licences detected, check Organization.Read.All consent');
+  }
 
   const gE = gel('d-gap'), gT = gel('d-gap-tile');
   if (headroom >= 0) {
@@ -1473,9 +1492,23 @@ function renderLiveDiscovery(data) {
     const p = total > 0 ? Math.round(gb / total * 100) : 0;
     const bw = Math.round(p * 0.9);
     const siteArch = Math.round(gb * verOH * Math.max(0, (assumedVer - keep) / assumedVer));
+
+    // Site URL comes straight from the tenant's own Graph report, so render
+    // it as a link — but only when it's a real https:// URL. Tenants with
+    // "conceal names in reports" enabled return 32-char hashes instead, and
+    // s.anonymised marks those; linking them would 404. Escape either way,
+    // since this string is tenant-controlled and goes into innerHTML.
+    const rawUrl = s.site_url || '';
+    const isLinkable = !s.anonymised && /^https:\/\//i.test(rawUrl);
+    const safeUrl = esc(rawUrl);
+    const label = rawUrl ? safeUrl : 'Site';
+    const nameCell = isLinkable
+      ? `<a class="rn site-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="Open ${safeUrl}">${label}</a>`
+      : `<div class="rn">${label}</div>`;
+
     return `<tr>
-      <td><div class="rn">${s.site_url || 'Site'}</div><div class="rs">${comma(Math.round(gb * verOH))} GB est. version copies</div></td>
-      <td><span class="badge bt">${s.owner || '—'}</span></td>
+      <td>${nameCell}<div class="rs">${comma(Math.round(gb * verOH))} GB est. version copies</div></td>
+      <td><span class="badge bt">${esc(s.owner || '—')}</span></td>
       <td><span class="site-bar" style="width:${bw}px"></span>${fmtGB(gb)}</td>
       <td class="c-dim">${p}%</td>
       <td class="c-amber">est. <span class="tip-icon" style="cursor:help;margin-left:3px" title="Exact per-file version count requires a deep scan">i</span></td>
