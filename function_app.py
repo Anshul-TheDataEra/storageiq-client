@@ -305,6 +305,40 @@ def call_intelligence(payload: dict) -> dict:
 
 
 # ===========================================================================
+# Aggregate a list of scan_site results into the running/final totals.
+# Pure function (no I/O, no context) so it can be reused by both the
+# per-batch partial snapshot and the final result.
+# ===========================================================================
+def _aggregate(results, total):
+    raw = {"used": 0, "version": 0, "cold": 0, "active": 0,
+           "files": 0, "versions": 0}
+    site_rows = []
+    for r in results:
+        if not r:
+            continue
+        rr = r.get("_raw", {})
+        for k in raw:
+            raw[k] += rr.get(k, 0)
+        clean = {k: v for k, v in r.items() if k != "_raw"}
+        if clean.get("file_count", 0) > 0:
+            site_rows.append(clean)
+    gb = lambda b: round(b / (1024 ** 3), 4)
+    summary = {
+        "sites_scanned": len(site_rows),
+        "sites_total": total,
+        "total_used_gb": gb(raw["used"]),
+        "version_storage_gb": gb(raw["version"]),
+        "cold_storage_gb": gb(raw["cold"]),
+        "active_storage_gb": gb(raw["active"]),
+        "total_files": raw["files"],
+        "total_versions": raw["versions"],
+        "avg_versions_per_file": round(raw["versions"] / raw["files"], 1)
+        if raw["files"] else 0,
+    }
+    return {"summary": summary, "sites": site_rows}
+
+
+# ===========================================================================
 # ORCHESTRATOR: scan (fan-out) -> aggregate raw -> call Intelligence API
 # ===========================================================================
 @app.orchestration_trigger(context_name="context")
@@ -326,34 +360,20 @@ def scan_orchestrator(context: df.DurableOrchestrationContext):
         context.set_custom_status({
             "phase": "scanning", "sites_total": total, "sites_done": completed})
 
-    # ---- Aggregate RAW numbers (no savings maths here) ----------------
-    raw = {"used": 0, "version": 0, "cold": 0, "active": 0,
-           "files": 0, "versions": 0}
-    site_rows = []
-    for r in results:
-        if not r:
-            continue
-        rr = r.get("_raw", {})
-        for k in raw:
-            raw[k] += rr.get(k, 0)
-        r.pop("_raw", None)
-        if r.get("file_count", 0) > 0:
-            site_rows.append(r)
+        # Persist a running snapshot after every batch. If the scan fails or
+        # is terminated here, the sites done so far are recoverable from the
+        # partial blob (and Durable resumes the remaining sites on restart).
+        running = _aggregate(results, total)
+        running["sites_done"] = completed
+        running["complete"] = False
+        yield context.call_activity("save_partial", running)
 
-    gb = lambda b: round(b / (1024 ** 3), 4)
-    summary = {
-        "sites_scanned": len(site_rows),
-        "sites_total": total,
-        "total_used_gb": gb(raw["used"]),
-        "version_storage_gb": gb(raw["version"]),
-        "cold_storage_gb": gb(raw["cold"]),
-        "active_storage_gb": gb(raw["active"]),
-        "total_files": raw["files"],
-        "total_versions": raw["versions"],
-        "avg_versions_per_file": round(raw["versions"] / raw["files"], 1)
-        if raw["files"] else 0,
-        "generated_utc": context.current_utc_datetime.isoformat(),
-    }
+    # ---- Aggregate RAW numbers (no savings maths here) ----------------
+    final = _aggregate(results, total)
+    final["complete"] = True
+    summary = final["summary"]
+    summary["generated_utc"] = context.current_utc_datetime.isoformat()
+    site_rows = final["sites"]
 
     # ---- Ask OUR Intelligence API for the valuable output -------------
     context.set_custom_status({
@@ -706,9 +726,10 @@ def usagemetrics(req: func.HttpRequest) -> func.HttpResponse:
 # ===========================================================================
 _CACHE_CONTAINER = "storageiq-cache"
 _CACHE_BLOB = "last-result.json"
+_PARTIAL_BLOB = "deep-scan-partial.json"   # progress snapshot during a scan
 
 
-def _cache_client():
+def _cache_client(blob_name=_CACHE_BLOB):
     from azure.storage.blob import BlobServiceClient
     conn = os.environ.get("AzureWebJobsStorage")
     if not conn:
@@ -718,7 +739,33 @@ def _cache_client():
         svc.create_container(_CACHE_CONTAINER)
     except Exception:
         pass  # already exists
-    return svc.get_blob_client(_CACHE_CONTAINER, _CACHE_BLOB)
+    return svc.get_blob_client(_CACHE_CONTAINER, blob_name)
+
+
+# ===========================================================================
+# ACTIVITY: persist a partial deep-scan snapshot after every batch, so a
+# scan that fails or is terminated part-way never loses the sites already
+# done — the last snapshot is recoverable, and Durable resumes the rest.
+# (Blob I/O can't run inside the orchestrator, so it's an activity.)
+# ===========================================================================
+@app.activity_trigger(input_name="snapshot")
+def save_partial(snapshot: dict) -> bool:
+    try:
+        bc = _cache_client(_PARTIAL_BLOB)
+        if bc is None:
+            return False
+        record = {
+            "saved_utc": datetime.datetime.now(
+                datetime.timezone.utc).isoformat(),
+            "kind": "deep-partial",
+            "complete": snapshot.get("complete", False),
+            "data": snapshot,
+        }
+        bc.upload_blob(json.dumps(record), overwrite=True)
+        return True
+    except Exception:
+        logging.exception("save_partial failed")
+        return False
 
 
 @app.route(route="saveresult", methods=["POST", "OPTIONS"])
@@ -780,4 +827,30 @@ def lastresult(req: func.HttpRequest) -> func.HttpResponse:
         # No cache yet (first run) — tell the dashboard to show the scan prompt.
         return func.HttpResponse(
             json.dumps({"status": "success", "cached": False, "record": None}),
+            mimetype="application/json", headers=cors)
+
+
+@app.route(route="partialresult", methods=["GET", "OPTIONS"])
+def partialresult(req: func.HttpRequest) -> func.HttpResponse:
+    """Return the latest per-batch deep-scan snapshot. Lets the dashboard show
+    (and recover) how far a scan got even if it failed or was terminated
+    before completing — nothing scanned is lost."""
+    cors = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=cors)
+    try:
+        bc = _cache_client(_PARTIAL_BLOB)
+        if bc is None:
+            raise RuntimeError("No storage connection configured")
+        record = json.loads(bc.download_blob().readall())
+        return func.HttpResponse(
+            json.dumps({"status": "success", "found": True, "record": record}),
+            mimetype="application/json", headers=cors)
+    except Exception:
+        return func.HttpResponse(
+            json.dumps({"status": "success", "found": False, "record": None}),
             mimetype="application/json", headers=cors)
