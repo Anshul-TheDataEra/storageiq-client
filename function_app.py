@@ -153,20 +153,54 @@ def graph_batch(rel_urls, token):
 
 
 # ===========================================================================
-# ACTIVITY: enumerate every site (paginated)
+# ACTIVITY: enumerate every site.
+#
+# Uses the SharePoint site-usage REPORT (one CSV call for the whole tenant)
+# instead of paging /sites?search=* — on a large tenant (13k+ sites) the
+# paged search took >5 min and hit the activity timeout, whereas the report
+# returns every site in a single request in seconds. Deleted sites are
+# skipped (they can't be scanned and shouldn't count).
 # ===========================================================================
 @app.activity_trigger(input_name="creds")
 def list_all_sites(creds: dict) -> list:
+    import csv
+    import io
     token = _get_token(creds.get("tenant_id"), creds.get("client_id"),
                        creds.get("client_secret"))
+    headers = {"Authorization": f"Bearer {token}"}
     sites = []
-    for s in graph_get_all(f"{GRAPH}/sites?search=*", token):
-        sid = s.get("id")
-        if not sid:
-            continue
-        sites.append({"id": sid,
-                      "name": s.get("displayName") or s.get("name") or "Site"})
-    logging.info("list_all_sites found %s sites", len(sites))
+    try:
+        url = (f"{GRAPH}/reports/"
+               f"getSharePointSiteUsageDetail(period='D7')")
+        resp = requests.get(url, headers=headers, timeout=120)
+        resp.raise_for_status()
+        reader = csv.DictReader(
+            io.StringIO(resp.content.decode("utf-8-sig")))
+        for row in reader:
+            if (row.get("Is Deleted") or "").strip().lower() == "true":
+                continue
+            sid = (row.get("Site Id") or "").strip()
+            if not sid:
+                continue
+            sites.append({
+                "id": sid,
+                "name": (row.get("Owner Display Name")
+                         or row.get("Site URL") or "Site"),
+                "url": row.get("Site URL") or "",
+            })
+        logging.info("list_all_sites (report) found %s sites", len(sites))
+    except Exception as e:
+        # Fallback to the paged search API if the report is unavailable
+        # (e.g. Reports.Read.All not granted). Slower, but keeps working
+        # on small tenants.
+        logging.warning("site report failed (%s); falling back to search", e)
+        for s in graph_get_all(f"{GRAPH}/sites?search=*", token):
+            sid = s.get("id")
+            if not sid:
+                continue
+            sites.append({"id": sid,
+                          "name": s.get("displayName") or s.get("name") or "Site"})
+        logging.info("list_all_sites (search) found %s sites", len(sites))
     return sites
 
 
@@ -180,8 +214,20 @@ def scan_site(job: dict) -> dict:
     creds = job["creds"]
     token = _get_token(creds.get("tenant_id"), creds.get("client_id"),
                        creds.get("client_secret"))
-    site_id = site["id"]
     now = datetime.datetime.now(datetime.timezone.utc)
+
+    # Build the Graph "/sites/..." selector. The usage report gives a plain
+    # site GUID (not usable as a Graph site-id) plus the Site URL; Graph
+    # accepts a URL-addressed site as /sites/{hostname}:{server-relative-path}.
+    # Prefer the URL when present, fall back to the raw id (works when the id
+    # came from the /sites search API instead of the report).
+    site_url = site.get("url") or ""
+    if site_url.startswith("http"):
+        from urllib.parse import urlparse
+        p = urlparse(site_url)
+        site_selector = f"{p.netloc}:{p.path}" if p.path and p.path != "/" else p.netloc
+    else:
+        site_selector = site.get("id", "")
 
     s_used = s_version = s_cold = s_active = 0
     s_files = s_versions = 0
@@ -189,7 +235,7 @@ def scan_site(job: dict) -> dict:
     # ---- Phase 1: collect every file (recursive walk) --------------------
     # Store (drive_id, item_id) so we can fetch versions in bulk afterwards.
     files = []   # list of dicts: {drive, id}
-    for drive in graph_get_all(f"{GRAPH}/sites/{site_id}/drives", token):
+    for drive in graph_get_all(f"{GRAPH}/sites/{site_selector}/drives", token):
         drive_id = drive.get("id")
         if not drive_id:
             continue
